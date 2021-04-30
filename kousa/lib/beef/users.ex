@@ -46,6 +46,8 @@ defmodule Beef.Users do
   # MUTATIONS
   defdelegate update(changeset), to: Beef.Repo
 
+  defdelegate join_room(user, room_id), to: Beef.Mutations.Users
+
   defdelegate edit_profile(user_id, data), to: Beef.Mutations.Users
   defdelegate delete(user_id), to: Beef.Mutations.Users
   defdelegate bulk_insert(users), to: Beef.Mutations.Users

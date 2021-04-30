@@ -3,13 +3,16 @@ defmodule Beef.Rooms do
   Empty context module for Rooms
   """
 
+  alias Beef.Repo
+  alias Beef.Schemas.Room
+
   # ACCESS functions
+  defdelegate get(room_id), to: Beef.Access.Rooms
+
   defdelegate get_room_status(user_id), to: Beef.Access.Rooms
-  defdelegate can_join_room(room_id, user_id), to: Beef.Access.Rooms
   defdelegate get_top_public_rooms(user_id, offset \\ 0), to: Beef.Access.Rooms
   defdelegate get_room_by_id(room_id), to: Beef.Access.Rooms
   defdelegate get_next_creator_for_room(room_id), to: Beef.Access.Rooms
-  defdelegate get_a_user_for_room(room_id), to: Beef.Access.Rooms
   defdelegate get_room_by_creator_id(creator_id), to: Beef.Access.Rooms
   defdelegate owner?(room_id, user_id), to: Beef.Access.Rooms
   defdelegate search_name(start_of_name), to: Beef.Access.Rooms
@@ -21,7 +24,6 @@ defmodule Beef.Rooms do
     to: Beef.Mutations.Rooms
 
   defdelegate replace_room_owner(user_id, new_creator_id), to: Beef.Mutations.Rooms
-  defdelegate join_room(room, user_id), to: Beef.Mutations.Rooms
   defdelegate increment_room_people_count(room_id), to: Beef.Mutations.Rooms
   defdelegate increment_room_people_count(room_id, new_people_list), to: Beef.Mutations.Rooms
   defdelegate delete_room_by_id(room_id), to: Beef.Mutations.Rooms

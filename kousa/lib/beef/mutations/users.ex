@@ -6,16 +6,32 @@ defmodule Beef.Mutations.Users do
   alias Beef.Queries.Users, as: Query
   alias Beef.RoomPermissions
 
+  # create-update-delete BASICS
+  def update(user, data) do
+    user
+    |> User.changeset(data)
+    |> Repo.update
+  end
+
+  def delete(user_id) do
+    %User{id: user_id} |> Repo.delete()
+  end
+
+  # SPECIFIC MUTATIONS
+  def join_room(user, room_id) do
+    user
+    |> User.join_room_changeset(room_id)
+    |> Repo.update()
+  end
+
+  ########################################################################
+
   def edit_profile(user_id, data) do
     # TODO: make this not perform a db query
     user_id
     |> Beef.Users.get_by_id()
     |> User.edit_changeset(data)
     |> Repo.update()
-  end
-
-  def delete(user_id) do
-    %User{id: user_id} |> Repo.delete()
   end
 
   def bulk_insert(users) do

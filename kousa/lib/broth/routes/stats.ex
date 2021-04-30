@@ -38,7 +38,7 @@ defmodule Broth.Routes.Stats do
     |> put_resp_content_type("application/json")
     |> send_resp(
       200,
-      Poison.encode!(%{"numUsers" => numUsers, "lastUpdated" => DateTime.to_iso8601(dt)})
+      Jason.encode!(%{"numUsers" => numUsers, "lastUpdated" => DateTime.to_iso8601(dt)})
     )
   end
 end

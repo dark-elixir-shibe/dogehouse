@@ -96,6 +96,10 @@ defmodule Broth.Message.Cast do
     attributes = module.__info__(:attributes)
 
     case {attributes[:schema], function_exported?(module, :__schema__, 2)} do
+      {nil, _} ->
+        raise CompileError,
+          description:  "reply module #{module} must be tagged with `use Broth.Message.Push`"
+
       {[^module], true} ->
         :ok
 

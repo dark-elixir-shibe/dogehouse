@@ -97,14 +97,6 @@ defmodule Kousa.Beef.RoomsTest do
     test "get_next_creator_for_room" do
     end
 
-    test "get_a_user_for_room" do
-      room = Factory.create(Room)
-      userForRoom = Factory.create(User, [{:currentRoomId, room.id}])
-      _notUserForRoom = Factory.create(User)
-
-      assert Beef.Rooms.get_a_user_for_room(room.id) == userForRoom
-    end
-
     test "get_room_by_creator_id" do
       u = Factory.create(User)
       createdByU = Factory.create(Room, [{:creatorId, u.id}])

@@ -3,6 +3,8 @@ defmodule Beef.Schemas.Room do
   import Ecto.Changeset
   @timestamps_opts [type: :utc_datetime_usec]
 
+  use Broth.Message.Push
+
   alias Beef.Schemas.User
 
   @type t :: %__MODULE__{
@@ -11,16 +13,14 @@ defmodule Beef.Schemas.Room do
           description: String.t(),
           numPeopleInside: integer(),
           isPrivate: boolean(),
-          user: User.t() | Ecto.Association.NotLoaded.t(),
-          peoplePreviewList: [User.Preview.t()]
+          user: User.t(),
+          attendees: [User.t()]
         }
 
-  @derive {Poison.Encoder, only: ~w(id name description numPeopleInside isPrivate
-           creatorId peoplePreviewList voiceServerId inserted_at)a}
   @derive {Jason.Encoder, only: ~w(id name description numPeopleInside isPrivate
            creatorId peoplePreviewList voiceServerId inserted_at)a}
 
-  @primary_key {:id, :binary_id, []}
+  @primary_key {:id, :binary_id, autogenerate: true}
   schema "rooms" do
     field(:name, :string)
     field(:description, :string, default: "")
@@ -29,9 +29,12 @@ defmodule Beef.Schemas.Room do
     field(:voiceServerId, :string)
     field(:autoSpeaker, :boolean, virtual: true)
 
-    # TODO: change this to creator!
+    # TODO: change this to owner!
     belongs_to(:user, User, foreign_key: :creatorId, type: :binary_id)
-    embeds_many(:peoplePreviewList, User.Preview)
+    has_many(:attendees, User, foreign_key: :currentRoomId)
+
+    field(:userIdsToInvite, {:array, :binary_id}, virtual: true, default: [])
+    field(:scheduledRoomId, :binary_id, virtual: true)
 
     timestamps()
   end

@@ -1,29 +1,24 @@
 defmodule Beef.Queries.Rooms do
-  import Ecto.Query
-  alias Beef.Schemas.User
+  import Ecto.Query, except: [preload: 2]
   alias Beef.Schemas.Room
 
   def start do
     from(r in Room)
   end
 
-  def userStart do
-    from(u in User)
+  def preload(query, :attendees) do
+    Ecto.Query.preload(query, :attendees)
   end
 
-  def filter_by_current_room_id(query, room_id) do
-    where(query, [u], u.currentRoomId == ^room_id)
-  end
-
-  def filter_by_creator_id(query, creator_id) do
-    where(query, [r], r.creatorId == ^creator_id)
-  end
-
-  def filter_by_room_id_and_creator_id(query, room_id, user_id) do
-    where(query, [r], r.id == ^room_id and r.creatorId == ^user_id)
+  def filter_by(query, filters) do
+    Enum.reduce(filters, query, fn
+      {:id, room_id}, query -> where(query, [r], r.id == ^room_id)
+      {:creatorId, user_id}, query -> where(query, [r], r.creatorId == ^user_id)
+    end)
   end
 
   def limit_one(query) do
     limit(query, [r], 1)
   end
+
 end

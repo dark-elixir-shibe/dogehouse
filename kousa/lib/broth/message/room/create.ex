@@ -1,61 +1,35 @@
 defmodule Broth.Message.Room.Create do
+
+  alias Beef.Schemas.Room
+
   use Broth.Message.Call,
-    reply: __MODULE__
+    schema: Room,
+    reply: Room
 
-  @derive {Jason.Encoder,
-           only: [:id, :creatorId, :name, :description, :isPrivate, :scheduledRoomId]}
-
-  @primary_key {:id, :binary_id, []}
-  schema "rooms" do
-    field(:creatorId, :binary_id)
-    field(:name, :string)
-    field(:description, :string)
-    field(:isPrivate, :boolean, default: false)
-    field(:userIdToInvite, {:array, :binary_id}, virtual: true)
-    field(:autoSpeaker, :boolean, virtual: true)
-    field(:scheduledRoomId, :binary_id, virtual: true)
+  def initialize(state) do
+    change(%Room{}, creatorId: state.user.id)
   end
 
-  # inbound data.
-  def changeset(initializer \\ %__MODULE__{}, data) do
+  def changeset(initializer \\ %Room{}, data) do
     initializer
     |> cast(data, [
       :name,
       :description,
       :isPrivate,
-      :userIdToInvite,
+      :userIdsToInvite,
       :autoSpeaker,
       :scheduledRoomId
     ])
     |> validate_required([:name])
   end
 
-  alias Beef.ScheduledRooms
-
-  def execute(changeset!, state) do
-    changeset! = put_change(changeset!, :creatorId, state.user.id)
-
-    # TODO: pass the changeset to the create_room and avoid the validation
-    # step.
-    with {:ok, room_spec} <- apply_action(changeset!, :validation),
-         {:ok, %{room: room}} <-
-           Kousa.Room.create_room(
-             state.user.id,
-             room_spec.name,
-             room_spec.description || "",
-             room_spec.isPrivate,
-             room_spec.userIdToInvite,
-             room_spec.autoSpeaker
-           ) do
-      case Ecto.UUID.cast(room_spec.scheduledRoomId) do
-        {:ok, _} ->
-          ScheduledRooms.room_started(state.user.id, room_spec.scheduledRoomId, room.id)
-
-        _ ->
-          nil
-      end
-
-      {:reply, struct(__MODULE__, Map.from_struct(room)), state}
+  def execute(changeset, state) do
+    changeset |> IO.inspect(label: "29")
+    state |> IO.inspect(label: "30")
+    case Kousa.Room.create_with(changeset, state.user) do
+      {:ok, room} ->
+        {:reply, room, %{state | room: room}}
+      error -> error
     end
   end
 end

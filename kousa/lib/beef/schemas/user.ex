@@ -6,25 +6,6 @@ defmodule Beef.Schemas.User do
   import Ecto.Changeset
   alias Beef.Schemas.Room
 
-  defmodule Preview do
-    use Ecto.Schema
-
-    # TODO: Make this a separate Schema that sees the same table.
-
-    @derive {Poison.Encoder, only: [:id, :displayName, :numFollowers, :avatarUrl]}
-    @derive {Jason.Encoder, only: [:id, :displayName, :numFollowers, :avatarUrl]}
-
-    @primary_key false
-    embedded_schema do
-      # does User.Preview really need an id?
-      field(:id, :binary_id)
-
-      field(:displayName, :string)
-      field(:numFollowers, :integer)
-      field(:avatarUrl, :string)
-    end
-  end
-
   @timestamps_opts [type: :utc_datetime_usec]
 
   @type t :: %__MODULE__{
@@ -55,10 +36,6 @@ defmodule Beef.Schemas.User do
           currentRoomId: Ecto.UUID.t(),
           currentRoom: Room.t() | Ecto.Association.NotLoaded.t()
         }
-
-  @derive {Poison.Encoder, only: ~w(id username avatarUrl bannerUrl bio online
-             lastOnline currentRoomId displayName numFollowing numFollowers
-             currentRoom youAreFollowing followsYou botOwnerId roomPermissions)a}
 
   @derive {Jason.Encoder, only: ~w(id username avatarUrl bannerUrl bio online
     lastOnline currentRoomId displayName numFollowing numFollowers
@@ -103,27 +80,27 @@ defmodule Beef.Schemas.User do
     timestamps()
   end
 
+  #############################################################################
+  ## CHANGESETS
+
   @doc false
-  def changeset(user, attrs) do
+  def create_changeset(data, attrs) do
     # TODO: amend this to accept *either* githubId or twitterId and also
     # pipe edit_changeset into this puppy.
-    user
+    data
     |> cast(attrs, ~w(username githubId avatarUrl bannerUrl)a)
-    |> validate_required([:username, :githubId, :avatarUrl, :bannerUrl])
+    |> changeset
   end
 
-  def edit_changeset(user, attrs) do
-    user
-    |> cast(attrs, [
-      :id,
-      :username,
-      :bio,
-      :displayName,
-      :avatarUrl,
-      :bannerUrl,
-      :apiKey,
-      :botOwnerId
-    ])
+  def join_room_changeset(data, room_id) do
+    data
+    |> change(%{currentRoomId: room_id})
+    |> changeset
+  end
+
+  def changeset(data, attrs \\ %{}) do
+    data
+    |> change
     |> validate_required([:username, :displayName, :avatarUrl])
     |> update_change(:displayName, &String.trim/1)
     |> validate_length(:bio, min: 0, max: 160)

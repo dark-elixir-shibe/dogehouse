@@ -68,7 +68,6 @@ defmodule Beef.Access.Users do
     Query.start()
     |> Query.filter_by_username(username)
     |> Query.follow_info(user_id)
-    |> Query.limit_one()
     |> Repo.one()
   end
 

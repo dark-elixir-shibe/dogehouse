@@ -13,6 +13,13 @@ defmodule Beef.Access.Rooms do
   alias Beef.RoomPermissions
   alias Beef.RoomBlocks
 
+  def get(room_id) do
+    Query.start
+    |> Query.filter_by(id: room_id)
+    |> Query.preload(:attendees)
+    |> Repo.one()
+  end
+
   def get_room_status(user_id) do
     room = Users.get_current_room(user_id)
 
@@ -30,33 +37,6 @@ defmodule Beef.Access.Rooms do
            %{askedToSpeak: true} -> :askedToSpeak
            _ -> :listener
          end, room}
-    end
-  end
-
-  def can_join_room(room_id, user_id) do
-    room = get_room_by_id(room_id)
-    room_id
-    max_room_size = Application.fetch_env!(:kousa, :max_room_size)
-
-    case room do
-      nil ->
-        {:error, "room doesn't exist anymore"}
-
-      _ ->
-        cond do
-          room.numPeopleInside >= max_room_size ->
-            {:error, "room is full"}
-
-          RoomBlocks.blocked?(room_id, user_id) ->
-            {:error, "you are blocked from the room"}
-
-          true ->
-            if UserBlocks.blocked?(room.creatorId, user_id) do
-              {:error, "the creator of the room blocked you"}
-            else
-              {:ok, room}
-            end
-        end
     end
   end
 
@@ -82,11 +62,6 @@ defmodule Beef.Access.Rooms do
      if(length(items) == @fetch_limit, do: -1 + offset + @fetch_limit, else: nil)}
   end
 
-  @spec get_room_by_id(any) :: any
-  def get_room_by_id(room_id) do
-    Repo.get(Room, room_id)
-  end
-
   @user_order """
     (case
       when ? then 1
@@ -107,24 +82,17 @@ defmodule Beef.Access.Rooms do
     |> Repo.one()
   end
 
-  def get_a_user_for_room(room_id) do
-    Query.userStart()
-    |> Query.filter_by_current_room_id(room_id)
-    |> Query.limit_one()
-    |> Repo.one()
-  end
-
   def get_room_by_creator_id(creator_id) do
     Query.start()
-    |> Query.filter_by_creator_id(creator_id)
-    |> Query.limit_one()
+    |> Query.filter_by(creatorId: creator_id)
     |> Repo.one()
   end
 
+  # TODO: MAKE THIS A LENSE.
   def owner?(room_id, user_id) do
     not is_nil(
       Query.start()
-      |> Query.filter_by_room_id_and_creator_id(room_id, user_id)
+      |> Query.filter_by(room_id: room_id, creatorId: user_id)
       |> Repo.one()
     )
   end

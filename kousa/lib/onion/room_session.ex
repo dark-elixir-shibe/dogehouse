@@ -1,75 +1,93 @@
 defmodule Onion.RoomSession do
   use GenServer, restart: :temporary
 
-  # TODO: change this.  Actually, make it an ecto thing.
-  defmodule State do
-    @type t :: %__MODULE__{
-            room_id: String.t(),
+  alias Kousa.Utils.UUID
+
+  @type uuid_set :: MapSet.t(UUID.t)
+
+  @type state :: %__MODULE__{
+            room: Beef.Schemas.Room.t,
             voice_server_id: String.t(),
-            users: [String.t()],
-            muteMap: map(),
-            deafMap: map(),
-            inviteMap: map(),
-            activeSpeakerMap: map(),
-            auto_speaker: boolean()
+            attendees: uuid_set(),
+            muteMap: uuid_set(),
+            deafMap: uuid_set(),
+            inviteMap: uuid_set(),
+            activeSpeakerMap: uuid_set(),
+            auto_speaker: boolean(),
+            callers: list(pid)
           }
 
-    defstruct room_id: "",
-              voice_server_id: "",
-              users: [],
-              muteMap: %{},
-              deafMap: %{},
-              inviteMap: %{},
-              activeSpeakerMap: %{},
-              auto_speaker: false
-  end
+  @empty_set MapSet.new()
+
+  defstruct [:room, :voice_server_id,
+            attendees: @empty_set,
+            muteMap: @empty_set,
+            deafMap: @empty_set,
+            inviteMap: @empty_set,
+            activeSpeakerMap: @empty_set,
+            auto_speaker: false,
+            callers: []]
+
+  @registry Onion.RoomSessionRegistry
+
+  alias Kousa.Utils.UUID
 
   #################################################################################
   # REGISTRY AND SUPERVISION BOILERPLATE
 
-  defp via(user_id), do: {:via, Registry, {Onion.RoomSessionRegistry, user_id}}
+  defp via(user_id), do: {:via, Registry, {@registry, user_id}}
 
   defp cast(user_id, params), do: GenServer.cast(via(user_id), params)
   defp call(user_id, params), do: GenServer.call(via(user_id), params)
 
-  def start_supervised(initial_values) do
+  def start_supervised(room) do
     callers = [self() | Process.get(:"$callers", [])]
 
     case DynamicSupervisor.start_child(
            Onion.RoomSessionDynamicSupervisor,
-           {__MODULE__, Keyword.merge(initial_values, callers: callers)}
+           {__MODULE__, %__MODULE__{room: room, callers: callers}}
          ) do
       {:error, {:already_started, pid}} -> {:ignored, pid}
       error -> error
     end
   end
 
-  def child_spec(init), do: %{super(init) | id: Keyword.get(init, :room_id)}
+  def child_spec(init), do: %{super(init) | id: init.room.id}
 
-  def count, do: Registry.count(Onion.RoomSessionRegistry)
-  def lookup(room_id), do: Registry.lookup(Onion.RoomSessionRegistry, room_id)
+  def count, do: Registry.count(@registry)
+  def lookup(room_id), do: Registry.lookup(@registry, room_id)
 
   ###############################################################################
   ## INITIALIZATION BOILERPLATE
 
   def start_link(init) do
-    GenServer.start_link(__MODULE__, init, name: via(init[:room_id]))
+    GenServer.start_link(__MODULE__, init, name: via(init.room.id))
   end
 
   def init(init) do
     # adopt callers from the call point.
-    Process.put(:"$callers", init[:callers])
+    Process.put(:"$callers", init.callers)
 
     # also launch a linked, supervised room.
-    Onion.Chat.start_link_supervised(init[:room_id])
-    {:ok, struct(State, init)}
+    Onion.Chat.start_link_supervised(init.room.id)
+
+    {:ok, init}
   end
 
   ########################################################################
   ## API
 
-  def ws_fan(users, msg) do
-    Enum.each(users, fn uid ->
+  @spec alive?(UUID.t) :: boolean
+
+  ########################################################################
+  ## API IMPLEMENTATION
+
+  def alive?(room_id) do
+    match?([_], Registry.lookup(@registry, room_id))
+  end
+
+  def ws_fan(attendees, msg) do
+    Enum.each(attendees, fn uid ->
       Onion.UserSession.send_ws(uid, nil, msg)
     end)
   end
@@ -107,7 +125,7 @@ defmodule Onion.RoomSession do
         do: Map.put(state.activeSpeakerMap, user_id, true),
         else: Map.delete(state.activeSpeakerMap, user_id)
 
-    ws_fan(state.users, %{
+    ws_fan(state.attendees, %{
       op: "active_speaker_change",
       d: %{
         activeSpeakerMap: newActiveSpeakerMap,
@@ -131,7 +149,7 @@ defmodule Onion.RoomSession do
   def broadcast_ws(room_id, msg), do: cast(room_id, {:broadcast_ws, msg})
 
   defp broadcast_ws_impl(msg, state) do
-    ws_fan(state.users, msg)
+    ws_fan(state.attendees, msg)
     {:noreply, state}
   end
 
@@ -172,7 +190,7 @@ defmodule Onion.RoomSession do
       uid: user_id
     })
 
-    ws_fan(state.users, %{
+    ws_fan(state.attendees, %{
       op: "speaker_removed",
       d: %{
         userId: user_id,
@@ -183,7 +201,7 @@ defmodule Onion.RoomSession do
       }
     })
 
-    {:noreply, %State{state | muteMap: new_mm, deafMap: new_dm}}
+    {:noreply, %{state | muteMap: new_mm, deafMap: new_dm}}
   end
 
   def add_speaker(room_id, user_id, muted?, deafened?)
@@ -209,7 +227,7 @@ defmodule Onion.RoomSession do
       uid: user_id
     })
 
-    ws_fan(state.users, %{
+    ws_fan(state.attendees, %{
       op: "speaker_added",
       d: %{
         userId: user_id,
@@ -222,51 +240,46 @@ defmodule Onion.RoomSession do
     {:noreply, %{state | muteMap: new_mm, deafMap: new_dm}}
   end
 
-  def join_room(room_id, user_id, mute, deaf, opts \\ []) do
-    cast(room_id, {:join_room, user_id, mute, deaf, opts})
+  def join_room(room_id, user, opts \\ []) do
+    cast(room_id, {:join_room, user, opts})
   end
 
-  defp join_room_impl(user_id, mute, deaf, opts, state) do
-    Onion.Chat.add_user(state.room_id, user_id)
+  defp join_room_impl(user, opts, state) do
+    user_id = user.id
+    room_id = state.room.id
+
+    Onion.Chat.add_user(room_id, user_id)
 
     # consider using MapSet instead!!
-    muteMap =
-      case mute do
-        nil -> state.muteMap
-        true -> Map.put(state.muteMap, user_id, true)
-        false -> Map.delete(state.muteMap, user_id)
-      end
 
-    deafMap =
-      case deaf do
-        nil -> state.deafMap
-        true -> Map.put(state.deafMap, user_id, true)
-        false -> Map.delete(state.deafMap, user_id)
-      end
+    muteMap = mapset_add_if(state.muteMap, user_id, user.muted)
+    deafMap = mapset_add_if(state.deafMap, user_id, user.deafened)
 
+    # TODO: MOVE THIS TO KOUSA.
     unless opts[:no_fan] do
-      ws_fan(state.users, %{
+      ws_fan(state.attendees, %{
         op: "new_user_join_room",
         d: %{
           user: Beef.Users.get_by_id_with_room_permissions(user_id),
           muteMap: muteMap,
           deafMap: deafMap,
-          roomId: state.room_id
+          roomId: room_id
         }
       })
     end
 
+    # TODO: make all of these MapSets.
     {:noreply,
      %{
        state
-       | users: [
-           # maybe use a set
-           user_id
-           | Enum.filter(state.users, fn uid -> uid != user_id end)
-         ],
+       | attendees: MapSet.put(state.attendees, user_id),
          muteMap: muteMap,
          deafMap: deafMap
      }}
+  end
+
+  defp mapset_add_if(mapset, value, condition) do
+    if condition, do: MapSet.put(mapset, value), else: MapSet.delete(mapset, value)
   end
 
   def mute(room_id, user_id, value), do: cast(room_id, {:mute, user_id, value})
@@ -275,7 +288,7 @@ defmodule Onion.RoomSession do
     changed = value != Map.has_key?(state.muteMap, user_id)
 
     if changed do
-      ws_fan(Enum.filter(state.users, &(&1 != user_id)), %{
+      ws_fan(Enum.filter(state.attendees, &(&1 != user_id)), %{
         op: "mute_changed",
         d: %{userId: user_id, value: value, roomId: state.room_id}
       })
@@ -301,7 +314,7 @@ defmodule Onion.RoomSession do
     changed = value != Map.has_key?(state.deafMap, user_id)
 
     if changed do
-      ws_fan(Enum.filter(state.users, &(&1 != user_id)), %{
+      ws_fan(Enum.filter(state.attendees, &(&1 != user_id)), %{
         op: "deafen_changed",
         d: %{userId: user_id, value: value, roomId: state.room_id}
       })
@@ -324,9 +337,9 @@ defmodule Onion.RoomSession do
   def destroy(room_id, user_id), do: cast(room_id, {:destroy, user_id})
 
   defp destroy_impl(user_id, state) do
-    users = Enum.filter(state.users, fn uid -> uid != user_id end)
+    attendees = Enum.filter(state.attendees, fn uid -> uid != user_id end)
 
-    ws_fan(users, %{
+    ws_fan(attendees, %{
       op: "room_destroyed",
       d: %{roomId: state.room_id}
     })
@@ -337,7 +350,7 @@ defmodule Onion.RoomSession do
   def kick_from_room(room_id, user_id), do: cast(room_id, {:kick_from_room, user_id})
 
   defp kick_from_room_impl(user_id, state) do
-    users = Enum.filter(state.users, fn uid -> uid != user_id end)
+    attendees = Enum.filter(state.attendees, fn uid -> uid != user_id end)
 
     Onion.Chat.remove_user(state.room_id, user_id)
 
@@ -347,7 +360,7 @@ defmodule Onion.RoomSession do
       d: %{peerId: user_id, roomId: state.room_id, kicked: true}
     })
 
-    ws_fan(users, %{
+    ws_fan(attendees, %{
       op: "user_left_room",
       d: %{userId: user_id, roomId: state.room_id, kicked: true}
     })
@@ -355,7 +368,7 @@ defmodule Onion.RoomSession do
     {:noreply,
      %{
        state
-       | users: users,
+       | attendees: attendees,
          muteMap: Map.delete(state.muteMap, user_id),
          deafMap: Map.delete(state.deafMap, user_id)
      }}
@@ -364,7 +377,7 @@ defmodule Onion.RoomSession do
   def leave_room(room_id, user_id), do: cast(room_id, {:leave_room, user_id})
 
   defp leave_room_impl(user_id, state) do
-    users = Enum.reject(state.users, &(&1 == user_id))
+    attendees = Enum.reject(state.attendees, &(&1 == user_id))
 
     Onion.Chat.remove_user(state.room_id, user_id)
 
@@ -374,20 +387,20 @@ defmodule Onion.RoomSession do
       d: %{peerId: user_id, roomId: state.room_id}
     })
 
-    ws_fan(users, %{
+    ws_fan(attendees, %{
       op: "user_left_room",
       d: %{userId: user_id, roomId: state.room_id}
     })
 
     new_state = %{
       state
-      | users: users,
+      | attendees: attendees,
         muteMap: Map.delete(state.muteMap, user_id),
         deafMap: Map.delete(state.deafMap, user_id)
     }
 
     # terminate room if it's empty
-    case new_state.users do
+    case new_state.attendees do
       [] ->
         {:stop, :normal, new_state}
 
@@ -395,6 +408,13 @@ defmodule Onion.RoomSession do
         {:noreply, new_state}
     end
   end
+
+  # for testing purposes only.
+  if Mix.env() == :test do
+    def dump(room_id), do: call(room_id, :dump)
+    def dump_impl(_reply, state), do: {:reply, state, state}
+  end
+
 
   ########################################################################
   ## ROUTER
@@ -405,6 +425,12 @@ defmodule Onion.RoomSession do
 
   def handle_call({:redeem_invite, user_id}, reply, state) do
     redeem_invite_impl(user_id, reply, state)
+  end
+
+  if Mix.env() == :test do
+    def handle_call(:dump, reply, state) do
+      dump_impl(reply, state)
+    end
   end
 
   def handle_cast({:kick_from_room, user_id}, state) do
@@ -435,8 +461,8 @@ defmodule Onion.RoomSession do
     add_speaker_impl(user_id, muted?, deafened?, state)
   end
 
-  def handle_cast({:join_room, user_id, mute, deaf, opts}, state) do
-    join_room_impl(user_id, mute, deaf, opts, state)
+  def handle_cast({:join_room, user, opts}, state) do
+    join_room_impl(user, opts, state)
   end
 
   def handle_cast({:mute, user_id, value}, state) do
