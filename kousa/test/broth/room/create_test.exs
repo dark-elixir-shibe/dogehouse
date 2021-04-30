@@ -49,7 +49,7 @@ defmodule BrothTest.Room.CreateTest do
       assert %{currentRoomId: ^room_id} = Users.get_by_id(user_id)
     end
 
-    test "can pass null description", t do
+    test "can go without passing description", t do
       user_id = t.user.id
 
       ref =
@@ -58,7 +58,6 @@ defmodule BrothTest.Room.CreateTest do
           "room:create",
           %{
             "name" => "foo room",
-            "description" => nil,
             "isPrivate" => true
           }
         )

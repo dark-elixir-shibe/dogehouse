@@ -1,5 +1,4 @@
 defmodule Broth.Message.Room.Create do
-
   alias Beef.Schemas.Room
 
   use Broth.Message.Call,
@@ -10,25 +9,12 @@ defmodule Broth.Message.Room.Create do
     change(%Room{}, creatorId: state.user.id)
   end
 
-  def changeset(initializer \\ %Room{}, data) do
-    initializer
-    |> cast(data, [
-      :name,
-      :description,
-      :isPrivate,
-      :userIdsToInvite,
-      :autoSpeaker,
-      :scheduledRoomId
-    ])
-    |> validate_required([:name])
-  end
+  defdelegate changeset(initializer, data), to: Beef.Schemas.Room, as: :create_changeset
 
   def execute(changeset, state) do
-    changeset |> IO.inspect(label: "29")
-    state |> IO.inspect(label: "30")
     case Kousa.Room.create_with(changeset, state.user) do
-      {:ok, room} ->
-        {:reply, room, %{state | room: room}}
+      {:ok, room, user} ->
+        {:reply, room, %{state | room: room, user: user}}
       error -> error
     end
   end

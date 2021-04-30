@@ -26,7 +26,7 @@ defmodule Beef.Schemas.Room do
     field(:name, :string)
     field(:description, :string, default: "")
     field(:numPeopleInside, :integer)
-    field(:isPrivate, :boolean)
+    field(:isPrivate, :boolean, default: false)
     field(:voiceServerId, :string)
     field(:autoSpeaker, :boolean, virtual: true)
 
@@ -40,12 +40,8 @@ defmodule Beef.Schemas.Room do
     timestamps()
   end
 
-  @spec insert_changeset(
-          {map, map} | %{:__struct__ => atom | %{__changeset__: map}, optional(atom) => any},
-          :invalid | %{optional(:__struct__) => none, optional(atom | binary) => any}
-        ) :: Ecto.Changeset.t()
   @doc false
-  def insert_changeset(room, attrs) do
+  def create_changeset(room, attrs) do
     room
     |> cast(attrs, [
       :id,
@@ -56,7 +52,7 @@ defmodule Beef.Schemas.Room do
       :voiceServerId,
       :description
     ])
-    |> validate_required([:name, :creatorId])
+    |> validate_required([:name, :creatorId, :isPrivate])
     |> validate_length(:name, min: 2, max: 60)
     |> validate_length(:description, max: 500)
     |> unique_constraint(:creatorId)

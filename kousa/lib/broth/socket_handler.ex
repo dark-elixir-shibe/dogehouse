@@ -3,6 +3,7 @@ defmodule Broth.SocketHandler do
   import Kousa.Utils.Version
 
   defstruct user: nil,
+            room: nil,
             ip: nil,
             encoding: nil,
             compression: nil,
@@ -11,6 +12,7 @@ defmodule Broth.SocketHandler do
 
   @type state :: %__MODULE__{
           user: nil | Beef.Schemas.User.t(),
+          room: nil | Beef.Schemas.Room.t(),
           ip: String.t(),
           encoding: :etf | :json,
           compression: nil | :zlib,
