@@ -65,7 +65,7 @@ defmodule BrothTest.WsClient do
         payload
     after
       100 ->
-        raise "reply to `#{op}` not received"
+        raise "reply to `#{op}` not received. #{drain()}"
     end
   end
 
@@ -77,7 +77,7 @@ defmodule BrothTest.WsClient do
         payload
     after
       100 ->
-        raise "reply to `#{op}` not received"
+        raise "reply to `#{op}` not received. #{drain()}"
     end
   end
 
@@ -225,6 +225,19 @@ defmodule BrothTest.WsClient do
     quote do
       from = unquote(from)
       ExUnit.Assertions.refute_receive({:text, %{"op" => unquote(op)}, ^from})
+    end
+  end
+
+  defp drain(prev \\ ["following messages found:"], index \\ 1) do
+    receive do
+      any ->
+        drain([prev, "\n\n", "#{index}: ", inspect(any)], index + 1)
+      after 0 ->
+        if match?([_], prev) do
+          "no other messages found"
+        else
+          prev
+        end
     end
   end
 
