@@ -3,7 +3,7 @@ defmodule BrothTest.Message.Room.CreateTest do
 
   @moduletag :message
 
-  alias Broth.Message.Room.Create
+  alias Beef.Schemas.Room
 
   setup do
     {:ok, uuid: UUID.uuid4()}
@@ -11,7 +11,7 @@ defmodule BrothTest.Message.Room.CreateTest do
 
   describe "when you send an create message to change name" do
     test "it populates create fields", %{uuid: uuid} do
-      assert {:ok, %{payload: %Create{name: "foobar"}}} =
+      assert {:ok, %{payload: %Room{name: "foobar"}}} =
                BrothTest.Support.Message.validate(%{
                  "operator" => "room:create",
                  "payload" => %{"name" => "foobar", "description" => "a room"},
@@ -19,7 +19,7 @@ defmodule BrothTest.Message.Room.CreateTest do
                })
 
       # short form also allowed
-      assert {:ok, %{payload: %Create{name: "foobar"}}} =
+      assert {:ok, %{payload: %Room{name: "foobar"}}} =
                BrothTest.Support.Message.validate(%{
                  "op" => "room:create",
                  "p" => %{"name" => "foobar", "description" => "a room"},
@@ -56,7 +56,7 @@ defmodule BrothTest.Message.Room.CreateTest do
 
   describe "when you send an create message with non-default privacy" do
     test "it validates", %{uuid: uuid} do
-      assert {:ok, %{payload: %Create{isPrivate: true}}} =
+      assert {:ok, %{payload: %Room{isPrivate: true}}} =
                BrothTest.Support.Message.validate(%{
                  "operator" => "room:create",
                  "payload" => %{

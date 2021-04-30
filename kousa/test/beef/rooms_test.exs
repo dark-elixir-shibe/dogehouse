@@ -5,6 +5,7 @@ defmodule Kousa.Beef.RoomsTest do
 
   alias KousaTest.Support.Factory
   alias Beef.Schemas.User
+  alias Beef.Schemas.UserPreview
   alias Beef.Schemas.Room
   alias Beef.Rooms
   alias Beef.Repo
@@ -273,8 +274,8 @@ defmodule Kousa.Beef.RoomsTest do
         })
 
       assert %Room{
-               peoplePreviewList: [
-                 %User.Preview{
+               attendees: [
+                 %UserPreview{
                    avatarUrl: ^avatarUrl,
                    displayName: ^displayName,
                    numFollowers: ^numFollowers,

@@ -6,6 +6,7 @@ defmodule Beef.Schemas.Room do
   use Broth.Message.Push
 
   alias Beef.Schemas.User
+  alias Beef.Schemas.UserPreview
 
   @type t :: %__MODULE__{
           id: Ecto.UUID.t(),
@@ -18,7 +19,7 @@ defmodule Beef.Schemas.Room do
         }
 
   @derive {Jason.Encoder, only: ~w(id name description numPeopleInside isPrivate
-           creatorId peoplePreviewList voiceServerId inserted_at)a}
+           creatorId voiceServerId inserted_at)a}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "rooms" do
@@ -31,7 +32,7 @@ defmodule Beef.Schemas.Room do
 
     # TODO: change this to owner!
     belongs_to(:user, User, foreign_key: :creatorId, type: :binary_id)
-    has_many(:attendees, User, foreign_key: :currentRoomId)
+    has_many(:attendees, UserPreview, foreign_key: :currentRoomId)
 
     field(:userIdsToInvite, {:array, :binary_id}, virtual: true, default: [])
     field(:scheduledRoomId, :binary_id, virtual: true)
