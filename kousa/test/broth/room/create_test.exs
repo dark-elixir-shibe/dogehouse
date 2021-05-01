@@ -109,5 +109,7 @@ defmodule BrothTest.Room.CreateTest do
       assert %ScheduledRoom{started: true, roomId: ^room_id} =
                ScheduledRooms.get_by_id(scheduled_room.id)
     end
+
+    test "can pass invitations to users"
   end
 end

@@ -48,4 +48,6 @@ defmodule BrothTest.CreateRoomTest do
       assert %{currentRoomId: ^room_id} = Users.get_by_id(user_id)
     end
   end
+
+  test "creates a new room with an invitation"
 end
