@@ -14,7 +14,6 @@ defmodule Beef.Schemas.Room do
           description: String.t(),
           numPeopleInside: integer(),
           isPrivate: boolean(),
-          user: User.t(),
           attendees: [User.t()]
         }
 

@@ -33,8 +33,8 @@ defmodule Beef.Schemas.User do
           followsYou: boolean(),
           botOwnerId: nil | Ecto.UUID.t(),
           roomPermissions: nil | Beef.Schemas.RoomPermission.t(),
-          currentRoomId: Ecto.UUID.t(),
-          currentRoom: Room.t() | Ecto.Association.NotLoaded.t()
+          currentRoomId: nil | Ecto.UUID.t(),
+          currentRoom: nil | Room.t()
         }
 
   @derive {Jason.Encoder, only: ~w(id username avatarUrl bannerUrl bio online

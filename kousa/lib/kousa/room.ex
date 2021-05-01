@@ -412,6 +412,7 @@ defmodule Kousa.Room do
     {:ok, room, user}
   end
 
+  # normal path: when the user is not in a room.
   def join(room = %{id: room_id}, user = %{currentRoomId: nil, id: user_id}) do
     case Beef.Lenses.Rooms.can_join(room, user_id) do
       :ok ->
@@ -436,6 +437,7 @@ defmodule Kousa.Room do
     end
   end
 
+  # if the user is in a room, leave it, then clear the room.
   def join(room, user) do
     leave(room, user)
     join(room, %{user | currentRoomId: nil})
