@@ -15,13 +15,15 @@ defmodule KousaTest.RoomTest do
 
   describe "create_with/1" do
     test "creates a room by the user", %{user: user = %{id: user_id}} do
-      PubSub.subscribe("room:*")
+      PubSub.subscribe("room:create")
 
       assert {:ok, room, user!} = %Room{}
       |> Ecto.Changeset.change(%{name: "foo room", creatorId: user_id})
       |> Kousa.Room.create_with(user)
 
       assert user.id == room.creatorId
+
+      assert_receive {"room:create", ^room}
 
       # checks that a Onion.RoomSession process exists
       assert Onion.RoomSession.alive?(room.id)
@@ -33,5 +35,7 @@ defmodule KousaTest.RoomTest do
       # checks that the user is in the room according to the database
       assert %{attendees: [%{id: ^user_id}]} = Beef.Rooms.get(room.id)
     end
+
+    test "broadcasts invites"
   end
 end

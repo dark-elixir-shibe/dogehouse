@@ -2,6 +2,7 @@ defmodule Onion.RoomSession do
   use GenServer, restart: :temporary
 
   alias Kousa.Utils.UUID
+  alias Onion.PubSub
 
   @type uuid_set :: MapSet.t(UUID.t)
 
@@ -29,8 +30,6 @@ defmodule Onion.RoomSession do
             callers: []]
 
   @registry Onion.RoomSessionRegistry
-
-  alias Kousa.Utils.UUID
 
   #################################################################################
   # REGISTRY AND SUPERVISION BOILERPLATE
@@ -70,6 +69,9 @@ defmodule Onion.RoomSession do
 
     # also launch a linked, supervised room.
     Onion.Chat.start_link_supervised(init.room.id)
+
+    # broadcast a notification that room has been created.
+    PubSub.broadcast("room:create", init.room)
 
     {:ok, init}
   end
