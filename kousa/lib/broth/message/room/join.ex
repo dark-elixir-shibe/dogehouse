@@ -17,8 +17,8 @@ defmodule Broth.Message.Room.Join do
   end
 
   def execute(changeset, state) do
-    with {:ok, %{roomId: room_id}} <- apply_action(changeset, :validate) |> IO.inspect(label: "20"),
-         {:ok, room} <- Kousa.Room.join(room_id, state.user.id) |> IO.inspect(label: "21") do
+    with {:ok, %{roomId: room_id}} <- apply_action(changeset, :validate),
+         {:ok, room} <- Kousa.Room.join(room_id, state.user.id) do
 
       {:reply, room, %{state | room: room}}
     end

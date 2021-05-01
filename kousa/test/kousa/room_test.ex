@@ -36,6 +36,25 @@ defmodule KousaTest.RoomTest do
       assert %{attendees: [%{id: ^user_id}]} = Beef.Rooms.get(room.id)
     end
 
-    test "broadcasts invites"
+    test "broadcasts invites", %{user: user = %{id: user_id}} do
+      PubSub.subscribe("room:create")
+
+      invited = %{id: invited_id} = Factory.create(User)
+      PubSub.subscribe("user:" <> invited_id)
+
+      assert {:ok, room = %{id: room_id}, user!} = %Room{}
+      |> Ecto.Changeset.change(%{name: "foo room", creatorId: user_id, userIdsToInvite: [invited_id]})
+      |> Kousa.Room.create_with(user)
+
+      assert user.id == room.creatorId
+
+      assert_receive {"room:create", ^room}
+
+      assert_receive {"user:" <> ^invited_id, %{
+        fromUserId: ^user_id,
+        name: "foo room",
+        roomId: ^room_id
+      }}
+    end
   end
 end

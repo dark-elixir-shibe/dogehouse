@@ -399,7 +399,7 @@ defmodule Kousa.Room do
           uid: user.id
         })
 
-        # Enum.map(room.userIdsToInvite, &invite_to_room(room, &1, from: user.id))
+        Enum.map(room.userIdsToInvite, &invite_to_room(room, &1, from: user.id))
 
         join(room, user)
       error -> error
@@ -441,6 +441,16 @@ defmodule Kousa.Room do
   def join(room, user) do
     leave(room, user)
     join(room, %{user | currentRoomId: nil})
+  end
+
+  defp invite_to_room(room, invite_id, from: user_id) do
+    alias Broth.Message.User.Invitation
+
+    PubSub.broadcast("user:" <> invite_id, %Invitation{
+      roomId: room.id,
+      name: room.name,
+      fromUserId: user_id
+    })
   end
 
   def leave(room, user), do: {:ok, room, user}
