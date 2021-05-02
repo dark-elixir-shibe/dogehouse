@@ -31,7 +31,7 @@ defmodule BrothTest.User.UpdateTest do
         )
 
       WsClient.assert_reply(
-        "user:reply",
+        "user:update:reply",
         ref,
         %{
           "username" => "new_username"
@@ -82,7 +82,7 @@ defmodule BrothTest.User.UpdateTest do
         )
 
       WsClient.assert_reply(
-        "user:reply",
+        "user:update:reply",
         ref,
         %{
           "bio" => "hi",
