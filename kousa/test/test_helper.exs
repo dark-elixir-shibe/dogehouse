@@ -56,7 +56,9 @@ if System.argv() == ["test"] do
     message_validation_modules =
       Enum.filter(all_elixir_modules, &KousaTest.message_validation_module?/1)
 
-    Enum.each(message_modules, fn module ->
+    message_modules
+    |> Enum.reject(&(&1.__info__(:attributes)[:directions] == [:outbound]))
+    |> Enum.each(fn module ->
       unless (tm = KousaTest.test_for(module)) in message_test_modules do
         raise "#{inspect(module)} did not have test module #{inspect(tm)}"
       end
