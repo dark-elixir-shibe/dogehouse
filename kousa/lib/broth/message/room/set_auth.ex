@@ -1,5 +1,8 @@
 defmodule Broth.Message.Room.SetAuth do
-  use Broth.Message.Cast
+  alias Broth.Message.Types.Empty
+
+  use Broth.Message.Call,
+    reply: Empty
 
   @primary_key false
   embedded_schema do
@@ -19,7 +22,7 @@ defmodule Broth.Message.Room.SetAuth do
   def execute(changeset, state) do
     with {:ok, %{userId: user_id, level: level}} <- apply_action(changeset, :validate) do
       Kousa.Room.set_auth(user_id, level, by: state.user.id)
-      {:noreply, state}
+      {:reply, %Empty{}, state}
     end
   end
 end

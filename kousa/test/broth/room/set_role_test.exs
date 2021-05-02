@@ -163,20 +163,18 @@ defmodule BrothTest.Room.SetRoleTest do
       speaker = %{id: speaker_id} = Factory.create(User)
       speaker_ws = WsClientFactory.create_client_for(speaker)
 
-      Kousa.Room.join_room(speaker_id, room_id)
-      Kousa.Room.set_role(speaker_id, :raised_hand, by: t.user.id)
-
-      WsClient.assert_frame_legacy("new_user_join_room", %{"user" => %{"id" => ^speaker_id}})
+      WsClient.do_call(speaker_ws, "room:join", %{"roomId" => room_id})
+      WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^speaker_id}}, t.user_ws)
 
       # create mod
       mod = %{id: mod_id} = Factory.create(User)
       mod_ws = WsClientFactory.create_client_for(mod)
+      WsClient.do_call(mod_ws, "room:join", %{"roomId" => room_id})
+      WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^mod_id}}, t.user_ws)
+      WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^mod_id}}, speaker_ws)
 
-      Kousa.Room.join_room(mod_id, room_id)
-
-      WsClient.assert_frame_legacy("new_user_join_room", %{"user" => %{"id" => ^mod_id}})
-
-      Kousa.Room.set_auth(mod_id, :mod, by: t.user.id)
+      IO.puts("===============================")
+      WsClient.do_call(t.user_ws, "room:set_auth", %{"userId" => mod_ws, "level" => "mod"})
 
       # add the person as a speaker.
       WsClient.send_msg(

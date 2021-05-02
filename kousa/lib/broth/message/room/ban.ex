@@ -1,5 +1,8 @@
 defmodule Broth.Message.Room.Ban do
-  use Broth.Message.Cast
+  alias Broth.Message.Types.Empty
+
+  use Broth.Message.Call,
+    reply: Empty
 
   @primary_key false
   embedded_schema do
@@ -21,7 +24,7 @@ defmodule Broth.Message.Room.Ban do
            apply_action(changeset, :validate) do
       # TODO: change to auth: format.
       Kousa.Room.block_from_room(state.user.id, user_id, should_ban_ip)
-      {:noreply, state}
+      {:reply, %Empty{}, state}
     end
   end
 end

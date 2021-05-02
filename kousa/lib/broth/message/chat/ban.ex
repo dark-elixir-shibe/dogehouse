@@ -1,5 +1,8 @@
 defmodule Broth.Message.Chat.Ban do
-  use Broth.Message.Cast
+  alias Broth.Message.Types.Empty
+
+  use Broth.Message.Call,
+    reply: Empty
 
   @primary_key false
   embedded_schema do
@@ -16,7 +19,7 @@ defmodule Broth.Message.Chat.Ban do
     with {:ok, %{userId: userId}} <- apply_action(changeset, :validate) do
       # TODO: change to by: format
       Kousa.Chat.ban_user(state.user.id, userId)
-      {:noreply, state}
+      {:reply, %Empty{}, state}
     end
   end
 end

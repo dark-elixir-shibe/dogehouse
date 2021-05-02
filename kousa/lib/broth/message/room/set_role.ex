@@ -1,6 +1,9 @@
 defmodule Broth.Message.Room.SetRole do
-  use Broth.Message.Cast
+  alias Broth.Message.Types.Empty
 
+  use Broth.Message.Call,
+    reply: Empty
+    
   @primary_key false
   embedded_schema do
     field(:userId, :binary_id)
@@ -25,7 +28,7 @@ defmodule Broth.Message.Room.SetRole do
   def execute(changeset, state) do
     with {:ok, %{userId: user_id, role: role}} <- apply_action(changeset, :validate) do
       Kousa.Room.set_role(user_id, role, by: state.user.id)
-      {:noreply, state}
+      {:reply, %Empty{}, state}
     end
   end
 end

@@ -1,5 +1,8 @@
 defmodule Broth.Message.Room.Invite do
-  use Broth.Message.Cast
+  alias Broth.Message.Types.Empty
+
+  use Broth.Message.Call,
+    reply: Empty
 
   @primary_key false
   embedded_schema do
@@ -16,7 +19,7 @@ defmodule Broth.Message.Room.Invite do
     case apply_action(data, :validate) do
       {:ok, invite} ->
         Kousa.Room.invite_to_room(state.user.id, invite.userId)
-        {:noreply, state}
+        {:reply, %Empty{}, state}
 
       error = {:error, _} ->
         error

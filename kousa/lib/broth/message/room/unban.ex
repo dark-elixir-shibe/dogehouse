@@ -1,5 +1,8 @@
 defmodule Broth.Message.Room.Unban do
-  use Broth.Message.Call
+  alias Broth.Message.Types.Empty
+
+  use Broth.Message.Call,
+    reply: Empty
 
   @primary_key false
   embedded_schema do
@@ -28,7 +31,7 @@ defmodule Broth.Message.Room.Unban do
   def execute(changeset, state) do
     with {:ok, %{userId: user_id}} <- apply_action(changeset, :validate) do
       Kousa.RoomBlock.unban(state.user.id, user_id)
-      {:reply, %Reply{}, state}
+      {:reply, %Empty{}, state}
     end
   end
 end

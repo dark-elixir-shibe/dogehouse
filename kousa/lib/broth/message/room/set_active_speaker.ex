@@ -1,5 +1,8 @@
 defmodule Broth.Message.Room.SetActiveSpeaker do
-  use Broth.Message.Cast
+  alias Broth.Message.Types.Empty
+
+  use Broth.Message.Call,
+    reply: Empty
 
   @primary_key false
   embedded_schema do
@@ -16,7 +19,7 @@ defmodule Broth.Message.Room.SetActiveSpeaker do
     with {:ok, %{active: active?}} <- apply_action(changeset, :validate),
          room_id when not is_nil(room_id) <- Beef.Users.get_current_room_id(user_id) do
       Onion.RoomSession.speaking_change(room_id, user_id, active?)
-      {:noreply, state}
+      {:reply, %Empty{}, state}
     else
       nil -> {:error, "not in a room"}
       error -> error
