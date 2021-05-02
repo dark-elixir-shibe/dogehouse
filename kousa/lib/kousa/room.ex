@@ -419,8 +419,8 @@ defmodule Kousa.Room do
     case Onion.RoomSession.join(room_id, user, opts) do
       {:ok, room, user} ->
         # subscribe to the room info and room chat channels
-        Onion.PubSub.subscribe("room:" <> room_id) |> IO.inspect(label: room_id)
-        Onion.PubSub.subscribe("chat:" <> room_id) |> IO.inspect(label: room_id)
+        Onion.PubSub.subscribe("room:" <> room_id)
+        Onion.PubSub.subscribe("chat:" <> room_id)
 
         # connect the user to the voicechat server
         # TODO: make sure roomPermissions is a correctly assigned preload.

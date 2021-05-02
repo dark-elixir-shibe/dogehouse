@@ -276,7 +276,7 @@ defmodule Onion.RoomSession do
           user: updated_user,
           muteMap: muteMap,
           deafMap: deafMap
-        } |> IO.inspect(label: "279")
+        }
       )
 
       {:reply, {:ok, updated_room, updated_user}, new_state}
