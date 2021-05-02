@@ -160,6 +160,16 @@ defmodule BrothTest.WsClient do
     end
   end
 
+  defmacro assert_empty_reply(op, ref, from! \\ nil) do
+    from! = if from!, do: {:^, [], from!}, else: {:_, [], Elixir}
+    quote do
+      ExUnit.Assertions.assert_receive({:text, msg, unquote(from!)})
+      ExUnit.Assertions.assert(%{"op" => unquote(op), "ref" => ^unquote(ref)} = msg)
+      ExUnit.Assertions.assert(msg["p"] == %{})
+      ExUnit.Assertions.refute(msg["e"])
+    end
+  end
+
   @doc """
   asserts that an error has been returned from a previously issued call or
   cast operation has been received, as identified by its reference uuid (`ref`).

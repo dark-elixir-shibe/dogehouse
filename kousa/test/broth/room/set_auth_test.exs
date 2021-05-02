@@ -38,7 +38,7 @@ defmodule BrothTest.Room.SetAuthTest do
       # join the speaker user into the room
       WsClient.do_call(speaker_ws, "room:join", %{"roomId" => room_id})
 
-      WsClient.assert_frame_legacy("new_user_join_room", %{"user" => %{"id" => ^speaker_id}})
+      WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^speaker_id}})
 
       # make the person a mod
       WsClient.send_msg(
@@ -81,13 +81,15 @@ defmodule BrothTest.Room.SetAuthTest do
       # join the speaker user into the room
       WsClient.do_call(speaker_ws, "room:join", %{"roomId" => room_id})
 
-      WsClient.assert_frame_legacy("new_user_join_room", %{"user" => %{"id" => ^speaker_id}})
+      WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^speaker_id}})
 
       # make the person a room creator.
-      WsClient.send_msg(t.user_ws, "room:set_auth", %{
+      ref = WsClient.send_call(t.user_ws, "room:set_auth", %{
         "userId" => speaker_id,
         "level" => "owner"
       })
+
+      WsClient.assert_empty_reply("room:set_auth:reply", ref)
 
       # NB: we get an extraneous speaker_added message here.
       WsClient.assert_frame_legacy(
