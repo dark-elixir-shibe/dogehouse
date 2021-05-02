@@ -3,7 +3,6 @@ defmodule Broth.SocketHandler do
   import Kousa.Utils.Version
 
   defstruct user: nil,
-            room: nil,
             ip: nil,
             encoding: nil,
             compression: nil,
@@ -12,7 +11,6 @@ defmodule Broth.SocketHandler do
 
   @type state :: %__MODULE__{
           user: nil | Beef.Schemas.User.t(),
-          room: nil | Beef.Schemas.Room.t(),
           ip: String.t(),
           encoding: :etf | :json,
           compression: nil | :zlib,
@@ -107,7 +105,7 @@ defmodule Broth.SocketHandler do
   ##########################################################################
   ## USER UPDATES
 
-  def user_update_impl({"user:update:" <> user_id, user}, state = %{user: %{id: user_id}}) do
+  def user_update_impl({"user:" <> user_id, user}, state = %{user: %{id: user_id}}) do
     %Broth.Message{operator: "user:update", payload: user}
     |> adopt_version(state)
     |> prepare_socket_msg(state)
@@ -115,6 +113,18 @@ defmodule Broth.SocketHandler do
   end
 
   def user_update_impl(_, state), do: ws_push(nil, state)
+
+  ##########################################################################
+  ## USER UPDATES
+
+  def room_update_impl({"room:" <> room_id, msg}, state = %{user: %{currentRoomId: room_id}}) do
+    %Broth.Message{operator: "room:joined", payload: msg}
+    |> adopt_version(state)
+    |> prepare_socket_msg(state)
+    |> ws_push(state)
+  end
+
+  def room_update_impl(_, state), do: ws_push(nil, state)
 
   ##########################################################################
   ## CHAT MESSAGES
@@ -352,7 +362,13 @@ defmodule Broth.SocketHandler do
   def websocket_info(:auth_timeout, state), do: auth_timeout_impl(state)
   def websocket_info({:remote_send, message}, state), do: remote_send_impl(message, state)
   def websocket_info(message = {"chat:" <> _, _}, state), do: chat_impl(message, state)
-  def websocket_info(message = {"user:update:" <> _, _}, state), do: user_update_impl(message, state)
+
+  def websocket_info(message = {"user:" <> _, _}, state),
+    do: user_update_impl(message, state)
+
+  def websocket_info(message = {"room:" <> _, _}, state),
+    do: room_update_impl(message, state)
+
   # throw out all other messages
   def websocket_info(_, state) do
     ws_push(nil, state)

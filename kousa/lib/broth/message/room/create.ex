@@ -14,8 +14,10 @@ defmodule Broth.Message.Room.Create do
   def execute(changeset, state) do
     case Kousa.Room.create_with(changeset, state.user) do
       {:ok, room, user} ->
-        {:reply, room, %{state | room: room, user: user}}
-      error -> error
+        {:reply, room, %{state | user: user}}
+
+      error ->
+        error
     end
   end
 end

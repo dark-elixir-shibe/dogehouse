@@ -98,7 +98,6 @@ defmodule Beef.Mutations.Rooms do
 
   @spec create(:invalid | %{optional(:__struct__) => none, optional(atom | binary) => any}) :: any
   def create(data) do
-
     raise "wtf"
 
     user = Beef.Users.get_by_id(data.creatorId)
@@ -112,26 +111,26 @@ defmodule Beef.Mutations.Rooms do
       }
     ]
 
-    #resp = raw_insert(data, peoplePreviewList)
+    # resp = raw_insert(data, peoplePreviewList)
 
-    #resp =
+    # resp =
     #  case resp do
     #    {:error, %{errors: [{:creatorId, {"has already been taken", _}}]}} ->
     #      raise "foo"
-#
+    #
     #    _ ->
     #      resp
     #  end
 
-    #case resp do
+    # case resp do
     #  {:ok, room} ->
     #    Beef.Users.set_current_room(data.creatorId, room.id)
-#
+    #
     #  _ ->
     #    nil
-    #end
-#
-    #resp
+    # end
+    #
+    # resp
   end
 
   def edit(room_id, data) do

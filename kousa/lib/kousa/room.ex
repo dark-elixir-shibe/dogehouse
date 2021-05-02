@@ -362,14 +362,7 @@ defmodule Kousa.Room do
     end
   end
 
-  def join_vc_room(room, user_id, speaker? \\ nil) do
-    speaker? =
-      if is_nil(speaker?),
-        do:
-          room.creatorId == user_id or
-            RoomPermissions.speaker?(user_id, room.id),
-        else: speaker?
-
+  def join_vc_room(room, user_id, speaker?) do
     op =
       if speaker?,
         do: "join-as-speaker",
@@ -382,7 +375,7 @@ defmodule Kousa.Room do
     })
   end
 
-  @spec create_with(Ecto.Changeset.t, User.t) :: {:ok, Room.t, User.t} | {:error, term}
+  @spec create_with(Ecto.Changeset.t(), User.t()) :: {:ok, Room.t(), User.t()} | {:error, term}
   def create_with(changeset, user) do
     changeset
     |> Ecto.Changeset.change(voiceServerId: VoiceServerUtils.get_next_voice_server_id())
@@ -399,48 +392,51 @@ defmodule Kousa.Room do
           uid: user.id
         })
 
-        Enum.map(room.userIdsToInvite, &invite_to_room(room, &1, from: user.id))
+        Enum.each(room.userIdsToInvite, &invite_to_room(room, &1, from: user.id))
 
-        join(room, user)
-      error -> error
+        join(room.id, user, speaker: true)
+
+      error ->
+        error
     end
   end
 
-  @spec join(Room.t, User.t) :: {:ok, Room.t} | {:error, term}
+  @typep join_result :: {:ok, Room.t(), User.t()} | {:ok, :noop} | {:error, term}
+  @typep join_opts :: [speaker: boolean]
+
+  @spec join(UUID.t(), User.t()) :: join_result
+  @spec join(UUID.t(), User.t(), join_opts) :: join_result
+
+  def join(room_id, user, opts \\ [])
+
   # no-op when the user is already in the room.
-  def join(room = %{id: room_id}, user = %{currentRoomId: room_id}) do
-    {:ok, room, user}
+  def join(room_id, %{currentRoomId: room_id}, _) do
+    {:ok, :noop}
   end
 
   # normal path: when the user is not in a room.
-  def join(room = %{id: room_id}, user = %{currentRoomId: nil, id: user_id}) do
-    case Beef.Lenses.Rooms.can_join(room, user_id) do
-      :ok ->
-        updated_user = Users.join_room(user, room_id)
+  def join(room_id, user = %{currentRoomId: nil}, opts) do
+    case Onion.RoomSession.join(room_id, user, opts) do
+      {:ok, room, user} ->
+        # subscribe to the room info and room chat channels
+        Onion.PubSub.subscribe("room:" <> room_id) |> IO.inspect(label: room_id)
+        Onion.PubSub.subscribe("chat:" <> room_id) |> IO.inspect(label: room_id)
 
-        Onion.RoomSession.join_room(room_id, user)
-
-        canSpeak =
-          case updated_user do
-            %{roomPermissions: %{isSpeaker: true}} -> true
-            _ -> false
-          end
-
-        join_vc_room(room, user_id, canSpeak || room.isPrivate)
-
-        # subscribe to the new room chat
-        PubSub.subscribe("chat:" <> room_id)
+        # connect the user to the voicechat server
+        # TODO: make sure roomPermissions is a correctly assigned preload.
+        join_vc_room(room, user.id, user.roomPermissions.isSpeaker || room.isPrivate)
 
         {:ok, room, user}
 
-      error -> error
+      error ->
+        error
     end
   end
 
   # if the user is in a room, leave it, then clear the room.
-  def join(room, user) do
-    leave(room, user)
-    join(room, %{user | currentRoomId: nil})
+  def join(room_id, user, opts) do
+    leave(room_id, user)
+    join(room_id, %{user | currentRoomId: nil}, opts)
   end
 
   defp invite_to_room(room, invite_id, from: user_id) do

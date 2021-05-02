@@ -3,31 +3,38 @@ defmodule Onion.RoomSession do
 
   alias Kousa.Utils.UUID
   alias Onion.PubSub
+  alias Beef.Schemas.Room
+  alias Beef.Schemas.User
+  alias Beef.Rooms
+  alias Beef.Users
 
-  @type uuid_set :: MapSet.t(UUID.t)
+  @type uuid_set :: MapSet.t(UUID.t())
 
   @type state :: %__MODULE__{
-            room: Beef.Schemas.Room.t,
-            voice_server_id: String.t(),
-            attendees: uuid_set(),
-            muteMap: uuid_set(),
-            deafMap: uuid_set(),
-            inviteMap: uuid_set(),
-            activeSpeakerMap: uuid_set(),
-            auto_speaker: boolean(),
-            callers: list(pid)
-          }
+          room: Room.t(),
+          voice_server_id: String.t(),
+          attendees: uuid_set(),
+          muteMap: uuid_set(),
+          deafMap: uuid_set(),
+          inviteMap: uuid_set(),
+          activeSpeakerMap: uuid_set(),
+          auto_speaker: boolean(),
+          callers: list(pid)
+        }
 
   @empty_set MapSet.new()
 
-  defstruct [:room, :voice_server_id,
-            attendees: @empty_set,
-            muteMap: @empty_set,
-            deafMap: @empty_set,
-            inviteMap: @empty_set,
-            activeSpeakerMap: @empty_set,
-            auto_speaker: false,
-            callers: []]
+  defstruct [
+    :room,
+    :voice_server_id,
+    attendees: @empty_set,
+    muteMap: @empty_set,
+    deafMap: @empty_set,
+    inviteMap: @empty_set,
+    activeSpeakerMap: @empty_set,
+    auto_speaker: false,
+    callers: []
+  ]
 
   @registry Onion.RoomSessionRegistry
 
@@ -71,7 +78,7 @@ defmodule Onion.RoomSession do
     Onion.Chat.start_link_supervised(init.room.id)
 
     # broadcast a notification that room has been created.
-    PubSub.broadcast("room:create", init.room)
+    PubSub.broadcast("room:all", init.room)
 
     {:ok, init}
   end
@@ -79,7 +86,7 @@ defmodule Onion.RoomSession do
   ########################################################################
   ## API
 
-  @spec alive?(UUID.t) :: boolean
+  @spec alive?(UUID.t()) :: boolean
 
   ########################################################################
   ## API IMPLEMENTATION
@@ -242,42 +249,41 @@ defmodule Onion.RoomSession do
     {:noreply, %{state | muteMap: new_mm, deafMap: new_dm}}
   end
 
-  def join_room(room_id, user, opts \\ []) do
-    cast(room_id, {:join_room, user, opts})
+  @spec join(UUID.t(), User.t(), keyword) :: {:ok, Room.t(), User.t()} | {:error, term}
+  def join(room_id, user, opts) do
+    call(room_id, {:join, user, opts})
   end
 
-  defp join_room_impl(user, opts, state) do
+  defp join_impl(user, opts, _reply, state = %{room: room}) do
     user_id = user.id
-    room_id = state.room.id
+    room_id = room.id
 
-    Onion.Chat.add_user(room_id, user_id)
+    with :ok <- Rooms.can_join(room, user_id),
+         {:ok, updated_user} <- Users.join_room(user, room_id, opts) do
+      updated_room = updated_user.currentRoom
 
-    # consider using MapSet instead!!
+      Onion.Chat.add_user(room_id, user_id)
 
-    muteMap = mapset_add_if(state.muteMap, user_id, user.muted)
-    deafMap = mapset_add_if(state.deafMap, user_id, user.deafened)
+      muteMap = mapset_add_if(state.muteMap, user_id, user.muted)
+      deafMap = mapset_add_if(state.deafMap, user_id, user.deafened)
 
-    # TODO: MOVE THIS TO KOUSA.
-    unless opts[:no_fan] do
-      ws_fan(state.attendees, %{
-        op: "new_user_join_room",
-        d: %{
-          user: Beef.Users.get_by_id_with_room_permissions(user_id),
+      new_state = %{state | room: updated_room, muteMap: muteMap, deafMap: deafMap}
+
+      # Broadcast.
+      PubSub.broadcast(
+        "room:" <> room_id,
+        %Broth.Message.Room.Joined{
+          user: updated_user,
           muteMap: muteMap,
-          deafMap: deafMap,
-          roomId: room_id
-        }
-      })
-    end
+          deafMap: deafMap
+        } |> IO.inspect(label: "279")
+      )
 
-    # TODO: make all of these MapSets.
-    {:noreply,
-     %{
-       state
-       | attendees: MapSet.put(state.attendees, user_id),
-         muteMap: muteMap,
-         deafMap: deafMap
-     }}
+      {:reply, {:ok, updated_room, updated_user}, new_state}
+    else
+      error ->
+        {:reply, error, state}
+    end
   end
 
   defp mapset_add_if(mapset, value, condition) do
@@ -417,7 +423,6 @@ defmodule Onion.RoomSession do
     def dump_impl(_reply, state), do: {:reply, state, state}
   end
 
-
   ########################################################################
   ## ROUTER
 
@@ -427,6 +432,10 @@ defmodule Onion.RoomSession do
 
   def handle_call({:redeem_invite, user_id}, reply, state) do
     redeem_invite_impl(user_id, reply, state)
+  end
+
+  def handle_call({:join, user, opts}, reply, state) do
+    join_impl(user, opts, reply, state)
   end
 
   if Mix.env() == :test do
@@ -461,10 +470,6 @@ defmodule Onion.RoomSession do
 
   def handle_cast({:add_speaker, user_id, muted?, deafened?}, state) do
     add_speaker_impl(user_id, muted?, deafened?, state)
-  end
-
-  def handle_cast({:join_room, user, opts}, state) do
-    join_room_impl(user, opts, state)
   end
 
   def handle_cast({:mute, user_id, value}, state) do

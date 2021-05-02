@@ -40,3 +40,10 @@ application under the application supervision tree
   - Keeping the DB mutations in the session guarantees serialization of the DB and
     limits the number of times we can have stale data cause a disruption.
 - The only DB functions that should exist outside of a session is create room.
+
+## Pubsub message channels
+- user:[UUID] user information about the user @ UUID
+- room:all    informational content about rooms
+  - **NB this channel may change to a Phoenix.Tracker channel**
+- room:[UUID] room-specific informational content about room @ UUID
+- chat:[UUID] chat or DM messages that are directed to user @ UUID, or room @ UUID

@@ -53,11 +53,12 @@ defmodule Kousa.Auth do
         UserSession.new_tokens(user.id, tokens)
       end
 
+      # can we trust this?
       roomIdFromFrontend = request.currentRoomId
 
       cond do
         user.currentRoomId ->
-          # TODO: move toroom business logic
+          # TODO: move to room business logic
           room = Rooms.get_room_by_id(user.currentRoomId)
 
           RoomSession.start_supervised(
@@ -65,6 +66,7 @@ defmodule Kousa.Auth do
             voice_server_id: room.voiceServerId
           )
 
+          raise "error"
           RoomSession.join_room(room.id, user.id, request.muted, request.deafened)
 
           if request.reconnectToVoice == true do
@@ -72,6 +74,7 @@ defmodule Kousa.Auth do
           end
 
         roomIdFromFrontend ->
+          raise "error"
           Kousa.Room.join_room(user.id, roomIdFromFrontend)
 
         true ->
@@ -81,7 +84,7 @@ defmodule Kousa.Auth do
       # subscribe to chats directed to oneself.
       PubSub.subscribe("chat:" <> user.id)
       # subscribe to user updates
-      PubSub.subscribe("user:update:" <> user.id)
+      PubSub.subscribe("user:" <> user.id)
 
       {:ok, user}
     else

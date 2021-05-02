@@ -20,5 +20,4 @@ defmodule Beef.Queries.Rooms do
   def limit_one(query) do
     limit(query, [r], 1)
   end
-
 end

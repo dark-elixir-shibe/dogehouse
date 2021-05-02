@@ -5,6 +5,7 @@ defmodule Beef.Schemas.User do
   use Broth.Message.Push
   import Ecto.Changeset
   alias Beef.Schemas.Room
+  alias Beef.Schemas.RoomPermission
 
   @timestamps_opts [type: :utc_datetime_usec]
 
@@ -37,10 +38,6 @@ defmodule Beef.Schemas.User do
           currentRoom: nil | Room.t()
         }
 
-  @derive {Jason.Encoder, only: ~w(id username avatarUrl bannerUrl bio online
-    lastOnline currentRoomId displayName numFollowing numFollowers
-    youAreFollowing followsYou botOwnerId roomPermissions)a}
-
   @primary_key {:id, :binary_id, []}
   schema "users" do
     field(:githubId, :string)
@@ -61,16 +58,20 @@ defmodule Beef.Schemas.User do
     field(:hasLoggedIn, :boolean)
     field(:online, :boolean)
     field(:lastOnline, :utc_datetime_usec)
-    field(:youAreFollowing, :boolean, virtual: true)
-    field(:followsYou, :boolean, virtual: true)
-    field(:roomPermissions, :map, virtual: true, null: true)
-    field(:muted, :boolean, virtual: true)
-    field(:deafened, :boolean, virtual: true)
-    field(:apiKey, :binary_id)
-    field(:ip, :string, null: true)
 
+    field(:apiKey, :binary_id)
+
+    # associations
+    has_one(:roomPermissions, Beef.Schemas.RoomPermission, foreign_key: :userId)
     belongs_to(:botOwner, Beef.Schemas.User, foreign_key: :botOwnerId, type: :binary_id)
     belongs_to(:currentRoom, Room, foreign_key: :currentRoomId, type: :binary_id)
+
+    # THESE ARE ON THE CHOPPING BLOCK
+    field(:youAreFollowing, :boolean, virtual: true)
+    field(:followsYou, :boolean, virtual: true)
+    field(:muted, :boolean, virtual: true)
+    field(:deafened, :boolean, virtual: true)
+    field(:ip, :string, null: true)
 
     many_to_many(:blocked_by, __MODULE__,
       join_through: "user_blocks",
@@ -92,10 +93,17 @@ defmodule Beef.Schemas.User do
     |> changeset
   end
 
-  def join_room_changeset(data, room_id) do
+  def join_room_changeset(data, room_id, permissions) do
     data
     |> change(%{currentRoomId: room_id})
+    |> add_permissions(permissions)
     |> changeset
+  end
+
+  defp add_permissions(changeset, permissions) do
+    changeset
+    |> Map.put(:params, %{"roomPermissions" => permissions})
+    |> cast_assoc(:roomPermissions, with: &RoomPermission.insert_changeset/2)
   end
 
   def changeset(data, attrs \\ %{}) do
@@ -115,5 +123,26 @@ defmodule Beef.Schemas.User do
       ~r/^https?:\/\/(www\.|)(pbs.twimg.com\/profile_banners\/(.+)\/(.+)\/(.+)(?:\.(jpg|png|jpeg|webp))?|avatars\.githubusercontent\.com\/u\/)/
     )
     |> unique_constraint(:username)
+  end
+
+  defimpl Jason.Encoder do
+    @fields ~w(id username avatarUrl bannerUrl bio online
+    lastOnline currentRoomId displayName numFollowing numFollowers
+    youAreFollowing followsYou botOwnerId roomPermission)a
+
+    @impl true
+    def encode(user, opts) do
+      user
+      |> Map.take(@fields)
+      |> filter_valid_room_permissions
+      |> Jason.Encoder.encode(opts)
+    end
+
+    defp filter_valid_room_permissions(user = %{roomPermissions: p})
+         when is_nil(p) or is_struct(p, Ecto.Association.NotLoaded) do
+      Map.delete(user, :roomPermissions)
+    end
+
+    defp filter_valid_room_permissions(user), do: user
   end
 end

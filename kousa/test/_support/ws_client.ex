@@ -232,7 +232,8 @@ defmodule BrothTest.WsClient do
     receive do
       any ->
         drain([prev, "\n\n", "#{index}: ", inspect(any)], index + 1)
-      after 0 ->
+    after
+      0 ->
         if match?([_], prev) do
           "no other messages found"
         else

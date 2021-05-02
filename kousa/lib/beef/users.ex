@@ -46,7 +46,7 @@ defmodule Beef.Users do
   # MUTATIONS
   defdelegate update(changeset), to: Beef.Repo
 
-  defdelegate join_room(user, room_id), to: Beef.Mutations.Users
+  defdelegate join_room(user, room_id, opts), to: Beef.Mutations.Users
 
   defdelegate edit_profile(user_id, data), to: Beef.Mutations.Users
   defdelegate delete(user_id), to: Beef.Mutations.Users
@@ -67,5 +67,4 @@ defmodule Beef.Users do
   defdelegate set_ip(user_id, ip), to: Beef.Mutations.Users
   defdelegate github_find_or_create(user, github_access_token), to: Beef.Mutations.Users
   defdelegate discord_find_or_create(user, discord_access_token), to: Beef.Mutations.Users
-
 end

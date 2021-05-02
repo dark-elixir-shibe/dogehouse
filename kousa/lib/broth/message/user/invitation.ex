@@ -3,9 +3,8 @@ defmodule Broth.Message.User.Invitation do
 
   @primary_key false
   embedded_schema do
-    field :roomId, :binary_id
-    field :name, :string
-    field :fromUserId, :binary_id
+    field(:roomId, :binary_id)
+    field(:name, :string)
+    field(:fromUserId, :binary_id)
   end
-
 end

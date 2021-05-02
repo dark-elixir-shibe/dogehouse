@@ -103,13 +103,7 @@ defmodule BrothTest.Room.SetRoleTest do
     end
 
     test "ask to speak makes you a speaker when auto speaker is on", t do
-      %{"id" => room_id} =
-        WsClient.do_call(
-          t.client_ws,
-          "room:create",
-          %{"name" => "foo room", "description" => "foo", "autoSpeaker" => true}
-        )
-
+      room_id = t.room_id
       # create a user that is logged in.
       speaker = %{id: speaker_id} = Factory.create(User)
       speaker_ws = WsClientFactory.create_client_for(speaker)
@@ -137,20 +131,20 @@ defmodule BrothTest.Room.SetRoleTest do
     end
 
     test "can only make them a speaker if they asked to speak", t do
-      # first, create a room owned by the primary user.
-      %{"id" => room_id} = WsClient.do_call(t.client_ws, "room:create", %{"name" => "room"})
+      room_id = t.room_id
       # make sure the user is in there.
       assert %{currentRoomId: ^room_id} = Users.get_by_id(t.user.id)
 
       # create a user that is logged in.
       speaker = %{id: speaker_id} = Factory.create(User)
+      speaker_ws = WsClientFactory.create_client_for(speaker)
 
       refute Beef.RoomPermissions.speaker?(speaker.id, room_id)
 
       # join the speaker user into the room
-      Kousa.Room.join_room(speaker_id, room_id)
+      WsClient.do_call(speaker_ws, "room:join", %{"roomId" => room_id})
 
-      WsClient.assert_frame_legacy("new_user_join_room", %{"user" => %{"id" => ^speaker_id}})
+      WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^speaker_id}})
 
       # add the person as a speaker.
       WsClient.send_msg(
@@ -164,8 +158,6 @@ defmodule BrothTest.Room.SetRoleTest do
 
     test "mod can make the person a speaker", t do
       room_id = t.room_id
-
-      %{"id" => room_id} = WsClient.do_call(t.client_ws, "room:create", %{"name" => "room"})
 
       # create a user that is logged in.
       speaker = %{id: speaker_id} = Factory.create(User)

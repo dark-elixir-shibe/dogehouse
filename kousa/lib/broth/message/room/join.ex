@@ -18,9 +18,11 @@ defmodule Broth.Message.Room.Join do
 
   def execute(changeset, state) do
     with {:ok, %{roomId: room_id}} <- apply_action(changeset, :validate),
-         {:ok, room} <- Kousa.Room.join(room_id, state.user.id) do
-
-      {:reply, room, %{state | room: room}}
+         {:ok, room, user} <- Kousa.Room.join(room_id, state.user) do
+      {:reply, room, %{state | user: user}}
+    else
+      {:ok, :noop} -> {:noreply, state}
+      error -> error
     end
   end
 end

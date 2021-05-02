@@ -14,7 +14,7 @@ defmodule Beef.Access.Rooms do
   alias Beef.RoomBlocks
 
   def get(room_id) do
-    Query.start
+    Query.start()
     |> Query.filter_by(id: room_id)
     |> Query.preload(:attendees)
     |> Repo.one()

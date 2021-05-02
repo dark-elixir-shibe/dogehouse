@@ -12,6 +12,16 @@ defmodule Beef.Queries.Users do
     from(u in User)
   end
 
+  def preload(query, :roomPermissions) do
+    Ecto.Query.preload(query, :roomPermissions)
+  end
+
+  def filter_by(query, filters) do
+    Enum.reduce(filters, query, fn
+      {:id, room_id}, query -> where(query, [r], r.id == ^room_id)
+    end)
+  end
+
   def limit_one(query) do
     limit(query, [], 1)
   end

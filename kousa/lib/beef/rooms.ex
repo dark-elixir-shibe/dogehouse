@@ -19,6 +19,9 @@ defmodule Beef.Rooms do
   @spec all_rooms :: any
   defdelegate all_rooms(), to: Beef.Access.Rooms
 
+  # LENSES
+  defdelegate can_join(room, user_id), to: Beef.Lenses.Rooms
+
   # MUTATION functions
   defdelegate set_room_privacy_by_creator_id(user_id, isPrivate, new_name),
     to: Beef.Mutations.Rooms

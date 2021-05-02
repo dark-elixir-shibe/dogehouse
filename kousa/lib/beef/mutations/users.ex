@@ -10,7 +10,7 @@ defmodule Beef.Mutations.Users do
   def update(user, data) do
     user
     |> User.changeset(data)
-    |> Repo.update
+    |> Repo.update()
   end
 
   def delete(user_id) do
@@ -18,10 +18,20 @@ defmodule Beef.Mutations.Users do
   end
 
   # SPECIFIC MUTATIONS
-  def join_room(user, room_id) do
+  def join_room(user, room_id, opts) do
+    perms! = if opts[:speaker], do: %{isSpeaker: true}, else: %{}
+    perms! = Map.merge(perms!, %{roomId: room_id, userId: user.id})
+
     user
-    |> User.join_room_changeset(room_id)
+    |> User.join_room_changeset(room_id, perms!)
     |> Repo.update()
+    |> case do
+      {:ok, user} ->
+        {:ok, Repo.preload(user, [:currentRoom, :roomPermissions])}
+
+      error ->
+        error
+    end
   end
 
   ########################################################################
