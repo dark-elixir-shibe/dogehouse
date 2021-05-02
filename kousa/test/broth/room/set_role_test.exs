@@ -173,25 +173,26 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^mod_id}}, t.user_ws)
       WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^mod_id}}, speaker_ws)
 
-      IO.puts("===============================")
-      WsClient.do_call(t.user_ws, "room:set_auth", %{"userId" => mod_ws, "level" => "mod"})
+      WsClient.do_call(t.user_ws, "room:set_auth", %{"userId" => mod_id, "level" => "mod"})
 
       # add the person as a speaker.
-      WsClient.send_msg(
+      ref = WsClient.send_call(
         mod_ws,
         "room:set_role",
         %{"userId" => speaker_id, "role" => "speaker"}
       )
 
+      WsClient.assert_reply("room:set_role:reply", ref, _)
+
       # both clients get notified
-      WsClient.assert_frame_legacy(
-        "speaker_added",
+      WsClient.assert_frame(
+        "room:speaker_added",
         %{"userId" => ^speaker_id, "roomId" => ^room_id},
         mod_ws
       )
 
-      WsClient.assert_frame_legacy(
-        "speaker_added",
+      WsClient.assert_frame(
+        "room:speaker_added",
         %{"userId" => ^speaker_id, "roomId" => ^room_id},
         speaker_ws
       )

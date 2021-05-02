@@ -290,6 +290,126 @@ defmodule Onion.RoomSession do
     if condition, do: MapSet.put(mapset, value), else: MapSet.delete(mapset, value)
   end
 
+  ###################################################################
+  ## SET ROLE
+
+  def set_role(room_id, user, opts) do
+    call(room_id, {:set_role, user, opts})
+  end
+
+  defp set_role_impl(user, opts, _reply, state) do
+    case opts[:to] do
+      role -> IO.inspect(role)
+        raise "XXX"
+      #:listener ->
+      #  set_listener(room_id, user_id, opts[:by])
+#
+      #:speaker ->
+      #  set_speaker(room_id, user_id, opts[:by])
+#
+      #:raised_hand ->
+      #  set_raised_hand(room_id, user_id, opts[:by])
+    end
+  end
+
+  ####################################################################
+  ## listener
+
+  defp set_listener(nil, _, _), do: :noop
+  # you are always allowed to set yourself as listener
+  defp set_listener(room_id, user_id, user_id) do
+    internal_set_listener(user_id, room_id)
+  end
+
+  defp set_listener(room_id, user_id, setter_id) do
+    # TODO: refactor this to be simpler.  The list of
+    # creators and mods should be in the preloads of the room.
+    case Rooms.get_room_status(setter_id) do
+      {_, nil} ->
+        :noop
+
+      {auth, _} when auth in [:creator, :mod] ->
+        internal_set_listener(user_id, room_id)
+
+      _ ->
+        :noop
+    end
+  end
+
+  defp internal_set_listener(user_id, room_id) do
+    RoomPermissions.make_listener(user_id, room_id)
+    Onion.RoomSession.remove_speaker(room_id, user_id)
+  end
+
+  ####################################################################
+  ## speaker
+
+  defp set_speaker(nil, _, _), do: :noop
+
+  defp set_speaker(room_id, user_id, setter_id) do
+    if not RoomPermissions.asked_to_speak?(user_id, room_id) do
+      :noop
+    else
+      case Rooms.get_room_status(setter_id) do
+        {_, nil} ->
+          :noop
+
+        {:mod, _} ->
+          internal_set_speaker(user_id, room_id)
+
+        {:creator, _} ->
+          internal_set_speaker(user_id, room_id)
+
+        {_, _} ->
+          :noop
+      end
+    end
+  end
+
+  @spec internal_set_speaker(any, any) :: nil | :ok | {:err, {:error, :not_found}}
+  defp internal_set_speaker(user_id, room_id) do
+    case RoomPermissions.set_speaker(user_id, room_id, true) do
+      {:ok, _} ->
+        # kind of horrible to have to make a double genserver call
+        # here, we'll have to think about how this works (who owns muting)
+        Onion.RoomSession.add_speaker(
+          room_id,
+          user_id,
+          Onion.UserSession.get(user_id, :muted),
+          Onion.UserSession.get(user_id, :deafened)
+        )
+
+      err ->
+        {:err, err}
+    end
+  catch
+    _, _ ->
+      {:error, "room not found"}
+  end
+
+  # only you can raise your own hand
+  defp set_raised_hand(room_id, user_id, _user_id) do
+    if Onion.RoomSession.get(room_id, :auto_speaker) do
+      internal_set_speaker(user_id, room_id)
+    else
+      case RoomPermissions.ask_to_speak(user_id, room_id) do
+        {:ok, %{isSpeaker: true}} ->
+          internal_set_speaker(user_id, room_id)
+
+        _ ->
+          Onion.RoomSession.broadcast_ws(
+            room_id,
+            %{
+              op: "hand_raised",
+              d: %{userId: user_id, roomId: room_id}
+            }
+          )
+      end
+    end
+  end
+
+  #############################################################################
+
   def mute(room_id, user_id, value), do: cast(room_id, {:mute, user_id, value})
 
   defp mute_impl(user_id, value, state) do
@@ -436,6 +556,10 @@ defmodule Onion.RoomSession do
 
   def handle_call({:join, user, opts}, reply, state) do
     join_impl(user, opts, reply, state)
+  end
+
+  def handle_call({:set_role, user, opts}, reply, state) do
+    set_role_impl(user, opts, reply, state)
   end
 
   if Mix.env() == :test do
