@@ -12,9 +12,9 @@ defmodule BrothTest.EditRoomTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket edit_room operation" do
@@ -23,7 +23,7 @@ defmodule BrothTest.EditRoomTest do
       # first, create a room owned by the primary user.
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -33,7 +33,7 @@ defmodule BrothTest.EditRoomTest do
 
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "edit_room",
           %{"name" => "bar room", "description" => "baz quux", "privacy" => "private"}
         )
@@ -41,7 +41,7 @@ defmodule BrothTest.EditRoomTest do
       WsClient.assert_reply_legacy(
         ref,
         true,
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(
@@ -66,7 +66,7 @@ defmodule BrothTest.EditRoomTest do
     test "when you're not in a room", t do
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "edit_room",
           %{}
         )
@@ -74,7 +74,7 @@ defmodule BrothTest.EditRoomTest do
       WsClient.assert_reply_legacy(
         ref,
         _,
-        t.client_ws
+        t.user_ws
       )
     end
 

@@ -11,9 +11,9 @@ defmodule BrothTest.User.BlockTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket user:block operation" do
@@ -23,7 +23,7 @@ defmodule BrothTest.User.BlockTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:block",
           %{"userId" => blocked_id}
         )
@@ -34,7 +34,7 @@ defmodule BrothTest.User.BlockTest do
         "user:block:reply",
         ref,
         %{"blocked" => [^blocked_id]},
-        t.client_ws
+        t.user_ws
       )
 
       assert Beef.UserBlocks.blocked?(t.user.id, blocked_id)

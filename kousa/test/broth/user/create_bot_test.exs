@@ -12,16 +12,16 @@ defmodule BrothTest.User.CreateBotTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket user:create_bot operation" do
     test "creates new user with username", t do
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:create_bot",
           %{
             "username" => "qowidjoqwd"
@@ -43,7 +43,7 @@ defmodule BrothTest.User.CreateBotTest do
     test "returns error for username that's already taken", t do
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:create_bot",
           %{
             "username" => t.user.username
@@ -60,7 +60,7 @@ defmodule BrothTest.User.CreateBotTest do
     test "bot accounts can't create bot accounts", t do
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:create_bot",
           %{
             "username" => "oqieuoqw"

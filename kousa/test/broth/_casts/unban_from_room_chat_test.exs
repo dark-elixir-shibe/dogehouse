@@ -12,16 +12,16 @@ defmodule BrothTest.UnbanFromRoomChatTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket unban_from_room_chat operation" do
     test "unbans the person from the room chat", t do
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -37,13 +37,13 @@ defmodule BrothTest.UnbanFromRoomChatTest do
       WsClient.do_call(banned_ws, "room:join", %{"roomId" => room_id})
       WsClient.assert_frame_legacy("new_user_join_room", _)
 
-      WsClient.send_msg_legacy(t.client_ws, "ban_from_room_chat", %{"userId" => banned_id})
-      WsClient.assert_frame_legacy("chat_user_banned", %{"userId" => ^banned_id}, t.client_ws)
+      WsClient.send_msg_legacy(t.user_ws, "ban_from_room_chat", %{"userId" => banned_id})
+      WsClient.assert_frame_legacy("chat_user_banned", %{"userId" => ^banned_id}, t.user_ws)
 
       assert Onion.Chat.banned?(room_id, banned_id)
 
-      WsClient.send_msg_legacy(t.client_ws, "unban_from_room_chat", %{"userId" => banned_id})
-      WsClient.assert_frame_legacy("chat_user_unbanned", %{"userId" => ^banned_id}, t.client_ws)
+      WsClient.send_msg_legacy(t.user_ws, "unban_from_room_chat", %{"userId" => banned_id})
+      WsClient.assert_frame_legacy("chat_user_unbanned", %{"userId" => ^banned_id}, t.user_ws)
 
       refute Onion.Chat.banned?(room_id, banned_id)
     end

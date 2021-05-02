@@ -13,16 +13,16 @@ defmodule BrothTest.Room.LeaveTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
     %{"id" => room_id} =
       WsClient.do_call(
-        client_ws,
+        user_ws,
         "room:create",
         %{"name" => "foo room", "description" => "foo"}
       )
 
-    {:ok, user: user, client_ws: client_ws, room_id: room_id}
+    {:ok, user: user, user_ws: user_ws, room_id: room_id}
   end
 
   describe "the websocket room:leave operation" do
@@ -31,7 +31,7 @@ defmodule BrothTest.Room.LeaveTest do
 
       assert Users.get_by_id(t.user.id).currentRoomId == room_id
 
-      ref = WsClient.send_call(t.client_ws, "room:leave", %{})
+      ref = WsClient.send_call(t.user_ws, "room:leave", %{})
 
       WsClient.assert_reply("room:leave:reply", ref, _)
 

@@ -29,22 +29,22 @@ defmodule BrothTest.WsClient do
 
   # an elaboration on the send_msg that represents the equivalent of
   # "fetching" / "calling" operations from the user.
-  def send_call(client_ws, op, payload) do
+  def send_call(user_ws, op, payload) do
     call_ref = UUID.uuid4()
 
     WebSockex.cast(
-      client_ws,
+      user_ws,
       {:send, %{"op" => op, "p" => payload, "ref" => call_ref, "v" => "0.2.0"}}
     )
 
     call_ref
   end
 
-  def send_call_legacy(client_ws, op, payload) do
+  def send_call_legacy(user_ws, op, payload) do
     call_ref = UUID.uuid4()
 
     WebSockex.cast(
-      client_ws,
+      user_ws,
       {:send, %{"op" => op, "d" => payload, "fetchId" => call_ref}}
     )
 
@@ -81,17 +81,17 @@ defmodule BrothTest.WsClient do
     end
   end
 
-  def send_msg(client_ws, op, payload),
-    do: WebSockex.cast(client_ws, {:send, %{"op" => op, "p" => payload, "v" => "0.2.0"}})
+  def send_msg(user_ws, op, payload),
+    do: WebSockex.cast(user_ws, {:send, %{"op" => op, "p" => payload, "v" => "0.2.0"}})
 
-  def send_msg_legacy(client_ws, op, payload),
-    do: WebSockex.cast(client_ws, {:send, %{"op" => op, "d" => payload}})
+  def send_msg_legacy(user_ws, op, payload),
+    do: WebSockex.cast(user_ws, {:send, %{"op" => op, "d" => payload}})
 
   defp send_msg_impl(map, test_pid) do
     {:reply, {:text, Jason.encode!(map)}, test_pid}
   end
 
-  def forward_frames(client_ws), do: WebSockex.cast(client_ws, {:forward_frames, self()})
+  def forward_frames(user_ws), do: WebSockex.cast(user_ws, {:forward_frames, self()})
   defp forward_frames_impl(test_pid, _state), do: {:ok, test_pid}
 
   defmacro assert_frame(op, payload, from \\ nil) do
@@ -212,12 +212,12 @@ defmodule BrothTest.WsClient do
   end
 
   # TODO: change off of Process.link and switch to Proce
-  defmacro assert_dies(client_ws, fun, reason, timeout \\ 100) do
-    quote bind_quoted: [client_ws: client_ws, fun: fun, reason: reason, timeout: timeout] do
+  defmacro assert_dies(user_ws, fun, reason, timeout \\ 100) do
+    quote bind_quoted: [user_ws: user_ws, fun: fun, reason: reason, timeout: timeout] do
       Process.flag(:trap_exit, true)
-      Process.link(client_ws)
+      Process.link(user_ws)
       fun.()
-      ExUnit.Assertions.assert_receive({:EXIT, ^client_ws, ^reason}, timeout)
+      ExUnit.Assertions.assert_receive({:EXIT, ^user_ws, ^reason}, timeout)
     end
   end
 
@@ -269,11 +269,11 @@ defmodule BrothTest.WsClientFactory do
     tokens = Kousa.Utils.TokenUtils.create_tokens(user)
 
     # start and link the websocket client
-    client_ws = ExUnit.Callbacks.start_supervised!(WsClient)
-    WsClient.forward_frames(client_ws)
+    user_ws = ExUnit.Callbacks.start_supervised!(WsClient)
+    WsClient.forward_frames(user_ws)
 
     if opts[:legacy] do
-      WsClient.send_msg(client_ws, "auth", %{
+      WsClient.send_msg(user_ws, "auth", %{
         "accessToken" => tokens.accessToken,
         "refreshToken" => tokens.refreshToken,
         "platform" => "foo",
@@ -284,7 +284,7 @@ defmodule BrothTest.WsClientFactory do
 
       WsClient.assert_frame_legacy("auth-good", _)
     else
-      WsClient.do_call(client_ws, "auth:request", %{
+      WsClient.do_call(user_ws, "auth:request", %{
         "accessToken" => tokens.accessToken,
         "refreshToken" => tokens.refreshToken,
         "platform" => "foo",
@@ -299,6 +299,6 @@ defmodule BrothTest.WsClientFactory do
     # associate the user session with the database.
     Process.link(usersession_pid)
 
-    client_ws
+    user_ws
   end
 end

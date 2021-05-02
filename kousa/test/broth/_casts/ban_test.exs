@@ -12,9 +12,9 @@ defmodule BrothTest.BanTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket ban operation" do
@@ -22,7 +22,7 @@ defmodule BrothTest.BanTest do
       banned = Factory.create(User)
       WsClientFactory.create_client_for(banned)
 
-      WsClient.send_msg_legacy(t.client_ws, "ban", %{
+      WsClient.send_msg_legacy(t.user_ws, "ban", %{
         "username" => banned.username,
         "reason" => "you're a douche"
       })
@@ -40,7 +40,7 @@ defmodule BrothTest.BanTest do
       banned = Factory.create(User)
       banned_ws = WsClientFactory.create_client_for(banned)
 
-      WsClient.send_msg_legacy(t.client_ws, "ban", %{
+      WsClient.send_msg_legacy(t.user_ws, "ban", %{
         "username" => banned.username,
         "reason" => "you're a douche"
       })
@@ -69,7 +69,7 @@ defmodule BrothTest.BanTest do
           %{"name" => "foo room", "description" => "foo"}
         )
 
-      WsClient.send_msg_legacy(t.client_ws, "ban", %{
+      WsClient.send_msg_legacy(t.user_ws, "ban", %{
         "username" => banned.username,
         "reason" => "you're a douche"
       })
@@ -103,7 +103,7 @@ defmodule BrothTest.BanTest do
 
       assert %{peoplePreviewList: [_, _]} = Beef.Rooms.get_room_by_id(room_id)
 
-      WsClient.send_msg_legacy(t.client_ws, "ban", %{
+      WsClient.send_msg_legacy(t.user_ws, "ban", %{
         "username" => banned.username,
         "reason" => "you're a douche"
       })

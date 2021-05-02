@@ -12,16 +12,16 @@ defmodule BrothTest.Room.JoinTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket room:join operation" do
     test "joins a user to a room", t do
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )

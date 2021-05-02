@@ -12,11 +12,11 @@ defmodule BrothTest.Room.SetRoleTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    %{"id" => room_id} = WsClient.do_call(client_ws, "room:create", %{"name" => "room"})
+    %{"id" => room_id} = WsClient.do_call(user_ws, "room:create", %{"name" => "room"})
 
-    {:ok, user: user, client_ws: client_ws, room_id: room_id}
+    {:ok, user: user, user_ws: user_ws, room_id: room_id}
   end
 
   describe "for when you room:set_role to listener" do
@@ -35,7 +35,7 @@ defmodule BrothTest.Room.SetRoleTest do
 
       assert Beef.RoomPermissions.speaker?(t.user.id, room_id)
 
-      WsClient.send_msg(t.client_ws, "room:set_role", %{
+      WsClient.send_msg(t.user_ws, "room:set_role", %{
         "userId" => speaker_id,
         "role" => "listener"
       })
@@ -43,7 +43,7 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.assert_frame_legacy(
         "speaker_removed",
         %{"roomId" => ^room_id, "userId" => ^speaker_id},
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(
@@ -81,7 +81,7 @@ defmodule BrothTest.Room.SetRoleTest do
 
       # add the person as a speaker.
       WsClient.send_msg(
-        t.client_ws,
+        t.user_ws,
         "room:set_role",
         %{"userId" => speaker_id, "role" => "speaker"}
       )
@@ -90,7 +90,7 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.assert_frame_legacy(
         "speaker_added",
         %{"userId" => ^speaker_id, "roomId" => ^room_id},
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(
@@ -118,7 +118,7 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.assert_frame_legacy(
         "speaker_added",
         %{"userId" => ^speaker_id, "roomId" => ^room_id},
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(
@@ -148,7 +148,7 @@ defmodule BrothTest.Room.SetRoleTest do
 
       # add the person as a speaker.
       WsClient.send_msg(
-        t.client_ws,
+        t.user_ws,
         "room:set_role",
         %{"userId" => speaker_id, "role" => "speaker"}
       )
@@ -163,7 +163,6 @@ defmodule BrothTest.Room.SetRoleTest do
       speaker = %{id: speaker_id} = Factory.create(User)
       speaker_ws = WsClientFactory.create_client_for(speaker)
 
-      # join the speaker user into the room
       Kousa.Room.join_room(speaker_id, room_id)
       Kousa.Room.set_role(speaker_id, :raised_hand, by: t.user.id)
 

@@ -12,16 +12,16 @@ defmodule BrothTest.GetTopPublicRoomsTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
     %{"id" => room_id} =
       WsClient.do_call(
-        client_ws,
+        user_ws,
         "room:create",
         %{"name" => "foo room", "description" => "foo"}
       )
 
-    {:ok, user: user, client_ws: client_ws, room_id: room_id}
+    {:ok, user: user, user_ws: user_ws, room_id: room_id}
   end
 
   describe "the websocket get_top_public_rooms operation" do
@@ -30,7 +30,7 @@ defmodule BrothTest.GetTopPublicRoomsTest do
 
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -40,7 +40,7 @@ defmodule BrothTest.GetTopPublicRoomsTest do
 
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "get_top_public_rooms",
           %{}
         )
@@ -48,7 +48,7 @@ defmodule BrothTest.GetTopPublicRoomsTest do
       WsClient.assert_reply_legacy(
         ref,
         %{"rooms" => [%{"id" => ^room_id}]},
-        t.client_ws
+        t.user_ws
       )
     end
 
@@ -57,7 +57,7 @@ defmodule BrothTest.GetTopPublicRoomsTest do
 
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo", "isPrivate" => true}
         )
@@ -67,7 +67,7 @@ defmodule BrothTest.GetTopPublicRoomsTest do
 
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "get_top_public_rooms",
           %{}
         )
@@ -75,7 +75,7 @@ defmodule BrothTest.GetTopPublicRoomsTest do
       WsClient.assert_reply_legacy(
         ref,
         %{"rooms" => []},
-        t.client_ws
+        t.user_ws
       )
     end
 

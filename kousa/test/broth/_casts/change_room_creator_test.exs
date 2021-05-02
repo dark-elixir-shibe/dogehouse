@@ -12,16 +12,16 @@ defmodule BrothTest.ChangeRoomCreatorTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket change_room_creator operation" do
     test "makes the person a room_creator", t do
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -40,13 +40,13 @@ defmodule BrothTest.ChangeRoomCreatorTest do
       Kousa.Room.set_role(speaker_id, :raised_hand, by: t.user.id)
 
       # add the person as a speaker.
-      WsClient.send_msg_legacy(t.client_ws, "add_speaker", %{"userId" => speaker_id})
+      WsClient.send_msg_legacy(t.user_ws, "add_speaker", %{"userId" => speaker_id})
 
       # both clients get notified
       WsClient.assert_frame_legacy(
         "speaker_added",
         %{"userId" => ^speaker_id, "roomId" => ^room_id},
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(
@@ -56,7 +56,7 @@ defmodule BrothTest.ChangeRoomCreatorTest do
       )
 
       # make the person a mod
-      WsClient.send_msg_legacy(t.client_ws, "change_mod_status", %{
+      WsClient.send_msg_legacy(t.user_ws, "change_mod_status", %{
         "userId" => speaker_id,
         "value" => true
       })
@@ -65,7 +65,7 @@ defmodule BrothTest.ChangeRoomCreatorTest do
       WsClient.assert_frame_legacy(
         "mod_changed",
         %{"userId" => ^speaker_id, "roomId" => ^room_id},
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(
@@ -75,7 +75,7 @@ defmodule BrothTest.ChangeRoomCreatorTest do
       )
 
       # make the person a room creator.
-      WsClient.send_msg_legacy(t.client_ws, "change_room_creator", %{
+      WsClient.send_msg_legacy(t.user_ws, "change_room_creator", %{
         "userId" => speaker_id
       })
 
@@ -86,7 +86,7 @@ defmodule BrothTest.ChangeRoomCreatorTest do
       )
 
       assert Beef.Rooms.get_room_by_id(room_id).creatorId == speaker_id
-      assert Process.alive?(t.client_ws)
+      assert Process.alive?(t.user_ws)
     end
 
     @tag :skip

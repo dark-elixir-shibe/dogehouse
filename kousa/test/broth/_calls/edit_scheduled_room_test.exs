@@ -11,9 +11,9 @@ defmodule BrothTest.EditScheduledRoomTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket edit_scheduled_room operation" do
@@ -29,7 +29,7 @@ defmodule BrothTest.EditScheduledRoomTest do
 
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "edit_scheduled_room",
           %{"id" => room_id, "data" => %{"name" => "bar room"}}
         )

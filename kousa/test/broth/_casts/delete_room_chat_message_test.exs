@@ -12,9 +12,9 @@ defmodule BrothTest.DeleteRoomChatMessageTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user, legacy: true)
+    user_ws = WsClientFactory.create_client_for(user, legacy: true)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket delete_room_chat_message operation" do
@@ -23,7 +23,7 @@ defmodule BrothTest.DeleteRoomChatMessageTest do
 
       %{"room" => %{"id" => room_id}} =
         WsClient.do_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "create_room",
           %{"name" => "foo room", "description" => "foo", "privacy" => "public"}
         )
@@ -47,7 +47,7 @@ defmodule BrothTest.DeleteRoomChatMessageTest do
       # maybe we should handle this at the frontend level?
       msg_id = UUID.uuid4()
 
-      WsClient.send_msg_legacy(t.client_ws, "delete_room_chat_message", %{
+      WsClient.send_msg_legacy(t.user_ws, "delete_room_chat_message", %{
         "messageId" => msg_id,
         "userId" => listener_id
       })
@@ -58,7 +58,7 @@ defmodule BrothTest.DeleteRoomChatMessageTest do
           "deleterId" => ^user_id,
           "messageId" => ^msg_id
         },
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(

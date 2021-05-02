@@ -12,9 +12,9 @@ defmodule BrothTest.SearchTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket misc:search operation" do
@@ -23,7 +23,7 @@ defmodule BrothTest.SearchTest do
 
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -33,7 +33,7 @@ defmodule BrothTest.SearchTest do
 
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "search",
           %{query: "foo"}
         )
@@ -41,7 +41,7 @@ defmodule BrothTest.SearchTest do
       WsClient.assert_reply_legacy(
         ref,
         %{"items" => [%{"id" => ^room_id}]},
-        t.client_ws
+        t.user_ws
       )
     end
 
@@ -50,7 +50,7 @@ defmodule BrothTest.SearchTest do
 
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo", "isPrivate" => true}
         )
@@ -60,7 +60,7 @@ defmodule BrothTest.SearchTest do
 
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "search",
           %{query: "foo"}
         )
@@ -68,14 +68,14 @@ defmodule BrothTest.SearchTest do
       WsClient.assert_reply_legacy(
         ref,
         %{"items" => []},
-        t.client_ws
+        t.user_ws
       )
     end
 
     test "returns user if query matches", t do
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "search",
           %{query: "@" <> t.user.username}
         )
@@ -85,7 +85,7 @@ defmodule BrothTest.SearchTest do
       WsClient.assert_reply_legacy(
         ref,
         %{"items" => [%{"id" => ^u_id}]},
-        t.client_ws
+        t.user_ws
       )
     end
   end

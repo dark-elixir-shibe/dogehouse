@@ -11,9 +11,9 @@ defmodule BrothTest.FollowTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the follow operation" do
@@ -22,7 +22,7 @@ defmodule BrothTest.FollowTest do
 
       refute Beef.Follows.following_me?(followed.id, t.user.id)
 
-      WsClient.send_call_legacy(t.client_ws, "follow", %{
+      WsClient.send_call_legacy(t.user_ws, "follow", %{
         "userId" => followed.id,
         "value" => true
       })
@@ -42,7 +42,7 @@ defmodule BrothTest.FollowTest do
 
       assert Beef.Follows.following_me?(followed.id, t.user.id)
 
-      WsClient.send_call_legacy(t.client_ws, "follow", %{
+      WsClient.send_call_legacy(t.user_ws, "follow", %{
         "userId" => followed.id,
         "value" => false
       })

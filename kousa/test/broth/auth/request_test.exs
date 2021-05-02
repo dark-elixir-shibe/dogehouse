@@ -59,13 +59,13 @@ defmodule BrothTest.Auth.RequestTest do
 
     test "no deafen", %{tokens: tokens, user_id: user_id} do
       # start and link the websocket client
-      client_ws = start_supervised!(WsClient)
-      Process.link(client_ws)
-      WsClient.forward_frames(client_ws)
+      user_ws = start_supervised!(WsClient)
+      Process.link(user_ws)
+      WsClient.forward_frames(user_ws)
 
       # login
       ref =
-        WsClient.send_call(client_ws, "auth:request", %{
+        WsClient.send_call(user_ws, "auth:request", %{
           "accessToken" => tokens.accessToken,
           "refreshToken" => tokens.refreshToken,
           "platform" => "foo",
@@ -78,7 +78,7 @@ defmodule BrothTest.Auth.RequestTest do
 
       %{"id" => room_id} =
         WsClient.do_call(
-          client_ws,
+          user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -86,7 +86,7 @@ defmodule BrothTest.Auth.RequestTest do
       assert %{currentRoomId: ^room_id} = Users.get_by_id(user_id)
 
       ref2 =
-        WsClient.send_call(client_ws, "auth:request", %{
+        WsClient.send_call(user_ws, "auth:request", %{
           "accessToken" => tokens.accessToken,
           "refreshToken" => tokens.refreshToken,
           "platform" => "foo",
@@ -99,13 +99,13 @@ defmodule BrothTest.Auth.RequestTest do
 
     test "fails auth if the accessToken is borked" do
       # start and link the websocket client
-      client_ws = start_supervised!(WsClient)
+      user_ws = start_supervised!(WsClient)
 
       # the websocket should die.
       WsClient.assert_dies(
-        client_ws,
+        user_ws,
         fn ->
-          WsClient.send_call(client_ws, "auth:request", %{
+          WsClient.send_call(user_ws, "auth:request", %{
             "accessToken" => "foo",
             "refreshToken" => "bar",
             "platform" => "foo",

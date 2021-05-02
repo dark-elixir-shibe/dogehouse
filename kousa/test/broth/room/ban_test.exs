@@ -12,16 +12,16 @@ defmodule BrothTest.Room.BanTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket room:ban operation" do
     test "blocks that person from a room", t do
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -38,12 +38,12 @@ defmodule BrothTest.Room.BanTest do
       WsClient.assert_frame_legacy("new_user_join_room", _)
 
       # block the person.
-      WsClient.send_msg(t.client_ws, "room:ban", %{"userId" => blocked_id})
+      WsClient.send_msg(t.user_ws, "room:ban", %{"userId" => blocked_id})
 
       WsClient.assert_frame_legacy(
         "user_left_room",
         %{"roomId" => ^room_id, "userId" => ^blocked_id},
-        t.client_ws
+        t.user_ws
       )
 
       assert Beef.RoomBlocks.blocked?(room_id, blocked_id)
@@ -67,12 +67,12 @@ defmodule BrothTest.Room.BanTest do
       WsClient.assert_frame_legacy("new_user_join_room", _)
 
       # block the person.
-      WsClient.send_msg(t.client_ws, "room:ban", %{"userId" => blocked_id, "shouldBanIp" => true})
+      WsClient.send_msg(t.user_ws, "room:ban", %{"userId" => blocked_id, "shouldBanIp" => true})
 
       WsClient.assert_frame_legacy(
         "user_left_room",
         %{"roomId" => ^room_id, "userId" => ^blocked_id},
-        t.client_ws
+        t.user_ws
       )
 
       assert Beef.RoomBlocks.blocked?(room_id, blocked_id)
@@ -98,13 +98,13 @@ defmodule BrothTest.Room.BanTest do
       Kousa.Room.join_room(blocked_id, room_id)
       WsClient.assert_frame_legacy("new_user_join_room", _)
 
-      WsClient.send_msg(t.client_ws, "room:ban", %{"userId" => blocked_id})
-      WsClient.send_msg(t.client_ws, "room:ban", %{"userId" => blocked_id, "shouldBanIp" => true})
+      WsClient.send_msg(t.user_ws, "room:ban", %{"userId" => blocked_id})
+      WsClient.send_msg(t.user_ws, "room:ban", %{"userId" => blocked_id, "shouldBanIp" => true})
 
       WsClient.assert_frame_legacy(
         "user_left_room",
         %{"roomId" => ^room_id, "userId" => ^blocked_id},
-        t.client_ws
+        t.user_ws
       )
 
       assert Beef.RoomBlocks.blocked?(room_id, blocked_id)

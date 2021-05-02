@@ -12,9 +12,9 @@ defmodule BrothTest.Room.UnbanTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket room:unban operation" do
@@ -22,7 +22,7 @@ defmodule BrothTest.Room.UnbanTest do
       # first, create a room owned by the test user.
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -44,12 +44,12 @@ defmodule BrothTest.Room.UnbanTest do
       # block the person.
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:unban",
           %{"userId" => blocked_id}
         )
 
-      WsClient.assert_reply("room:unban:reply", ref, %{}, t.client_ws)
+      WsClient.assert_reply("room:unban:reply", ref, %{}, t.user_ws)
 
       refute Beef.RoomBlocks.blocked?(room_id, blocked_id)
     end

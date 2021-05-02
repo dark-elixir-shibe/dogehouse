@@ -11,9 +11,9 @@ defmodule BrothTest.ScheduleRoomTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket schedule_room operation" do
@@ -22,7 +22,7 @@ defmodule BrothTest.ScheduleRoomTest do
 
       ref =
         WsClient.send_call_legacy(
-          t.client_ws,
+          t.user_ws,
           "schedule_room",
           %{"name" => "foo room", "scheduledFor" => DateTime.to_iso8601(time)}
         )

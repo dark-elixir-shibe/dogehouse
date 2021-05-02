@@ -12,9 +12,9 @@ defmodule BrothTest.User.UpdateTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket user:update operation" do
@@ -23,7 +23,7 @@ defmodule BrothTest.User.UpdateTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:update",
           %{
             "username" => "new_username"
@@ -56,7 +56,7 @@ defmodule BrothTest.User.UpdateTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:update",
           %{
             "username" => existing_username
@@ -71,7 +71,7 @@ defmodule BrothTest.User.UpdateTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:update",
           %{
             "bio" => "hi",

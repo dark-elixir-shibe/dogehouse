@@ -14,16 +14,16 @@ defmodule BrothTest.BlockFromRoomTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
     %{"id" => room_id} =
       WsClient.do_call(
-        client_ws,
+        user_ws,
         "room:create",
         %{"name" => "foo room", "description" => "foo"}
       )
 
-    {:ok, user: user, client_ws: client_ws, room_id: room_id}
+    {:ok, user: user, user_ws: user_ws, room_id: room_id}
   end
 
   describe "the websocket block_from_room operation" do
@@ -41,12 +41,12 @@ defmodule BrothTest.BlockFromRoomTest do
       WsClient.assert_frame_legacy("new_user_join_room", _)
 
       # block the person.
-      WsClient.send_msg_legacy(t.client_ws, "block_from_room", %{"userId" => blocked_id})
+      WsClient.send_msg_legacy(t.user_ws, "block_from_room", %{"userId" => blocked_id})
 
       WsClient.assert_frame_legacy(
         "user_left_room",
         %{"roomId" => ^room_id, "userId" => ^blocked_id},
-        t.client_ws
+        t.user_ws
       )
 
       assert Beef.RoomBlocks.blocked?(room_id, blocked_id)
@@ -69,14 +69,14 @@ defmodule BrothTest.BlockFromRoomTest do
 
       capture_deprecation(fn ->
         # block the person.
-        WsClient.send_msg_legacy(t.client_ws, "block_user_and_from_room", %{
+        WsClient.send_msg_legacy(t.user_ws, "block_user_and_from_room", %{
           "userId" => blocked_id
         })
 
         WsClient.assert_frame_legacy(
           "user_left_room",
           %{"roomId" => ^room_id, "userId" => ^blocked_id},
-          t.client_ws
+          t.user_ws
         )
       end)
 

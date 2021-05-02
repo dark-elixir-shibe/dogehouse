@@ -12,16 +12,16 @@ defmodule BrothTest.Room.SetAuthTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
     %{"id" => room_id} =
       WsClient.do_call(
-        client_ws,
+        user_ws,
         "room:create",
         %{"name" => "foo room", "description" => "foo"}
       )
 
-    {:ok, user: user, client_ws: client_ws, room_id: room_id}
+    {:ok, user: user, user_ws: user_ws, room_id: room_id}
   end
 
   describe "the using room:set_auth with mod" do
@@ -42,7 +42,7 @@ defmodule BrothTest.Room.SetAuthTest do
 
       # make the person a mod
       WsClient.send_msg(
-        t.client_ws,
+        t.user_ws,
         "room:set_auth",
         %{
           "userId" => speaker_id,
@@ -54,7 +54,7 @@ defmodule BrothTest.Room.SetAuthTest do
       WsClient.assert_frame_legacy(
         "mod_changed",
         %{"userId" => ^speaker_id, "roomId" => ^room_id},
-        t.client_ws
+        t.user_ws
       )
 
       WsClient.assert_frame_legacy(
@@ -84,7 +84,7 @@ defmodule BrothTest.Room.SetAuthTest do
       WsClient.assert_frame_legacy("new_user_join_room", %{"user" => %{"id" => ^speaker_id}})
 
       # make the person a room creator.
-      WsClient.send_msg(t.client_ws, "room:set_auth", %{
+      WsClient.send_msg(t.user_ws, "room:set_auth", %{
         "userId" => speaker_id,
         "level" => "owner"
       })
@@ -96,7 +96,7 @@ defmodule BrothTest.Room.SetAuthTest do
       )
 
       assert Beef.Rooms.get_room_by_id(room_id).creatorId == speaker_id
-      assert Process.alive?(t.client_ws)
+      assert Process.alive?(t.user_ws)
     end
 
     @tag :skip

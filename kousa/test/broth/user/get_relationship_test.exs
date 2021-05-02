@@ -11,9 +11,9 @@ defmodule BrothTest.User.GetRelationshipTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket user:get_relationship operation" do
@@ -25,7 +25,7 @@ defmodule BrothTest.User.GetRelationshipTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:get_relationship",
           %{"userId" => user_id}
         )
@@ -34,12 +34,12 @@ defmodule BrothTest.User.GetRelationshipTest do
         "user:get_relationship:reply",
         ref,
         %{"relationship" => "self"},
-        t.client_ws
+        t.user_ws
       )
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:get_relationship",
           %{"userId" => followed_id}
         )
@@ -48,7 +48,7 @@ defmodule BrothTest.User.GetRelationshipTest do
         "user:get_relationship:reply",
         ref,
         %{"relationship" => nil},
-        t.client_ws
+        t.user_ws
       )
 
       ref =
@@ -70,7 +70,7 @@ defmodule BrothTest.User.GetRelationshipTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:get_relationship",
           %{"userId" => followed_id}
         )
@@ -79,7 +79,7 @@ defmodule BrothTest.User.GetRelationshipTest do
         "user:get_relationship:reply",
         ref,
         %{"relationship" => "mutual"},
-        t.client_ws
+        t.user_ws
       )
 
       ref =
@@ -107,7 +107,7 @@ defmodule BrothTest.User.GetRelationshipTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:get_relationship",
           %{"userId" => followed_id}
         )
@@ -116,7 +116,7 @@ defmodule BrothTest.User.GetRelationshipTest do
         "user:get_relationship:reply",
         ref,
         %{"relationship" => "following"},
-        t.client_ws
+        t.user_ws
       )
 
       ref =

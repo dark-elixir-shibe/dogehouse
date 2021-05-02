@@ -11,16 +11,16 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
     %{"id" => room_id} =
       WsClient.do_call(
-        client_ws,
+        user_ws,
         "room:create",
         %{"name" => "foo room", "description" => "foo"}
       )
 
-    {:ok, user: user, client_ws: client_ws, room_id: room_id}
+    {:ok, user: user, user_ws: user_ws, room_id: room_id}
   end
 
   describe "the websocket room:set_active_speaker operation" do
@@ -37,7 +37,7 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
       assert %{} = Onion.RoomSession.get(room_id, :activeSpeakerMap)
 
       WsClient.send_msg(
-        t.client_ws,
+        t.user_ws,
         "room:set_active_speaker",
         %{"active" => true}
       )
@@ -46,7 +46,7 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
       WsClient.assert_frame_legacy(
         "active_speaker_change",
         %{"activeSpeakerMap" => map},
-        t.client_ws
+        t.user_ws
       )
 
       assert is_map_key(map, t.user.id)
@@ -66,7 +66,7 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
       Process.sleep(100)
 
       WsClient.send_msg(
-        t.client_ws,
+        t.user_ws,
         "room:set_active_speaker",
         %{"active" => false}
       )
@@ -74,7 +74,7 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
       WsClient.assert_frame_legacy(
         "active_speaker_change",
         %{"activeSpeakerMap" => map},
-        t.client_ws
+        t.user_ws
       )
 
       refute is_map_key(map, t.user.id)
@@ -105,7 +105,7 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
       Onion.RoomSession.get(room_id, :activeSpeakerMap)
 
       WsClient.send_msg(
-        t.client_ws,
+        t.user_ws,
         "room:set_active_speaker",
         %{"active" => false}
       )

@@ -11,9 +11,9 @@ defmodule BrothTest.User.FollowTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the user:follow operation" do
@@ -23,7 +23,7 @@ defmodule BrothTest.User.FollowTest do
       refute Beef.Follows.following_me?(followed.id, t.user.id)
 
       ref =
-        WsClient.send_call(t.client_ws, "user:follow", %{
+        WsClient.send_call(t.user_ws, "user:follow", %{
           "userId" => followed.id
         })
 

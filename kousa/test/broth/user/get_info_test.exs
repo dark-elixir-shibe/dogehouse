@@ -11,9 +11,9 @@ defmodule BrothTest.User.GetInfoTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket user:get_info operation" do
@@ -22,7 +22,7 @@ defmodule BrothTest.User.GetInfoTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:get_info",
           %{"userIdOrUsername" => t.user.id}
         )
@@ -41,7 +41,7 @@ defmodule BrothTest.User.GetInfoTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "user:get_info",
           %{"userIdOrUsername" => "aosifdjoqwejfoq"}
         )

@@ -12,9 +12,9 @@ defmodule BrothTest.User.BanTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket user:ban operation" do
@@ -23,7 +23,7 @@ defmodule BrothTest.User.BanTest do
       WsClientFactory.create_client_for(banned)
 
       ref =
-        WsClient.send_call(t.client_ws, "user:ban", %{
+        WsClient.send_call(t.user_ws, "user:ban", %{
           "userId" => banned.id,
           "reason" => "you're a douche"
         })
@@ -43,7 +43,7 @@ defmodule BrothTest.User.BanTest do
       banned_ws = WsClientFactory.create_client_for(banned)
 
       ref =
-        WsClient.send_call(t.client_ws, "user:ban", %{
+        WsClient.send_call(t.user_ws, "user:ban", %{
           "userId" => banned.id,
           "reason" => "you're a douche"
         })
@@ -73,7 +73,7 @@ defmodule BrothTest.User.BanTest do
           %{"name" => "foo room", "description" => "foo"}
         )
 
-      WsClient.do_call(t.client_ws, "user:ban", %{
+      WsClient.do_call(t.user_ws, "user:ban", %{
         "userId" => banned.id,
         "reason" => "you're a douche"
       })
@@ -108,7 +108,7 @@ defmodule BrothTest.User.BanTest do
 
       assert %{peoplePreviewList: [_, _]} = Beef.Rooms.get_room_by_id(room_id)
 
-      WsClient.send_call(t.client_ws, "user:ban", %{
+      WsClient.send_call(t.user_ws, "user:ban", %{
         "userId" => banned.id,
         "reason" => "you're a douche"
       })

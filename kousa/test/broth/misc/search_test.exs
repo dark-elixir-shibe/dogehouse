@@ -12,8 +12,8 @@ defmodule BrothTest.Misc.Search do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
-    {:ok, user: user, client_ws: client_ws}
+    user_ws = WsClientFactory.create_client_for(user)
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket misc:search operation" do
@@ -22,7 +22,7 @@ defmodule BrothTest.Misc.Search do
 
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo"}
         )
@@ -32,7 +32,7 @@ defmodule BrothTest.Misc.Search do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "misc:search",
           %{query: "foo"}
         )
@@ -41,7 +41,7 @@ defmodule BrothTest.Misc.Search do
         "misc:search:reply",
         ref,
         %{"items" => [%{"id" => ^room_id}]},
-        t.client_ws
+        t.user_ws
       )
     end
 
@@ -50,7 +50,7 @@ defmodule BrothTest.Misc.Search do
 
       %{"id" => room_id} =
         WsClient.do_call(
-          t.client_ws,
+          t.user_ws,
           "room:create",
           %{"name" => "foo room", "description" => "foo", "isPrivate" => true}
         )
@@ -60,7 +60,7 @@ defmodule BrothTest.Misc.Search do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "misc:search",
           %{query: "foo"}
         )
@@ -69,14 +69,14 @@ defmodule BrothTest.Misc.Search do
         "misc:search:reply",
         ref,
         %{"items" => []},
-        t.client_ws
+        t.user_ws
       )
     end
 
     test "returns user if query matches", t do
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "misc:search",
           %{query: "@" <> t.user.username}
         )
@@ -87,7 +87,7 @@ defmodule BrothTest.Misc.Search do
         "misc:search:reply",
         ref,
         %{"items" => [%{"id" => ^u_id}]},
-        t.client_ws
+        t.user_ws
       )
     end
   end

@@ -11,16 +11,16 @@ defmodule BrothTest.Room.GetScheduledTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "when you supply your userId to room:get_scheduled " do
     test "it returns no rooms if there are none", t do
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:get_scheduled",
           %{"range" => "upcoming", "userId" => t.user.id}
         )
@@ -43,7 +43,7 @@ defmodule BrothTest.Room.GetScheduledTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:get_scheduled",
           %{"range" => "upcoming", "userId" => user_id}
         )
@@ -78,7 +78,7 @@ defmodule BrothTest.Room.GetScheduledTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:get_scheduled",
           %{"range" => "upcoming", "userId" => user_id}
         )
@@ -103,7 +103,7 @@ defmodule BrothTest.Room.GetScheduledTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:get_scheduled",
           %{"range" => "upcoming", "userId" => user_id}
         )
@@ -128,7 +128,7 @@ defmodule BrothTest.Room.GetScheduledTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:get_scheduled",
           %{"userId" => user_id}
         )
@@ -152,7 +152,7 @@ defmodule BrothTest.Room.GetScheduledTest do
     test "it returns no rooms if there are none", t do
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:get_scheduled",
           %{}
         )
@@ -177,7 +177,7 @@ defmodule BrothTest.Room.GetScheduledTest do
 
       ref =
         WsClient.send_call(
-          t.client_ws,
+          t.user_ws,
           "room:get_scheduled",
           %{}
         )

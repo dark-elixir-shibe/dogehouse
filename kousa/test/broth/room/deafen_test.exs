@@ -12,16 +12,16 @@ defmodule BrothTest.Room.DeafenTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
     %{"id" => room_id} =
       WsClient.do_call(
-        client_ws,
+        user_ws,
         "room:create",
         %{"name" => "foo room", "description" => "foo"}
       )
 
-    {:ok, user: user, client_ws: client_ws, room_id: room_id}
+    {:ok, user: user, user_ws: user_ws, room_id: room_id}
   end
 
   describe "the websocket room:deafen operation" do
@@ -31,14 +31,14 @@ defmodule BrothTest.Room.DeafenTest do
       assert %{currentRoomId: ^room_id} = Users.get_by_id(t.user.id)
 
       # deaf ON
-      ref = WsClient.send_call(t.client_ws, "room:deafen", %{"deafened" => true})
+      ref = WsClient.send_call(t.user_ws, "room:deafen", %{"deafened" => true})
       WsClient.assert_reply("room:deafen:reply", ref, _)
       Process.sleep(100)
       map = Onion.RoomSession.get(room_id, :deafMap)
       assert is_map_key(map, t.user.id)
 
       # deaf OFF
-      ref = WsClient.send_call(t.client_ws, "room:deafen", %{"deafened" => false})
+      ref = WsClient.send_call(t.user_ws, "room:deafen", %{"deafened" => false})
       WsClient.assert_reply("room:deafen:reply", ref, _)
       Process.sleep(100)
       map = Onion.RoomSession.get(room_id, :deafMap)
@@ -50,7 +50,7 @@ defmodule BrothTest.Room.DeafenTest do
       # make sure the user is in there.
       assert %{currentRoomId: ^room_id} = Users.get_by_id(t.user.id)
 
-      ref = WsClient.send_call(t.client_ws, "room:deafen", %{"deafened" => false})
+      ref = WsClient.send_call(t.user_ws, "room:deafen", %{"deafened" => false})
 
       WsClient.assert_reply("room:deafen:reply", ref, _)
 

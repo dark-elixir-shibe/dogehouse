@@ -11,14 +11,14 @@ defmodule BrothTest.User.GetFollowersTest do
 
   setup do
     user = Factory.create(User)
-    client_ws = WsClientFactory.create_client_for(user)
+    user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, client_ws: client_ws}
+    {:ok, user: user, user_ws: user_ws}
   end
 
   describe "the websocket user:get_followers operation" do
     test "returns an empty list if no one is following you", t do
-      ref = WsClient.send_call(t.client_ws, "user:get_followers", %{"cursor" => 0})
+      ref = WsClient.send_call(t.user_ws, "user:get_followers", %{"cursor" => 0})
 
       WsClient.assert_reply("user:get_followers:reply", ref, %{"followers" => []})
     end
@@ -28,7 +28,7 @@ defmodule BrothTest.User.GetFollowersTest do
       Kousa.Follow.follow(follower_id, t.user.id, true)
 
       ref =
-        WsClient.send_call(t.client_ws, "user:get_followers", %{
+        WsClient.send_call(t.user_ws, "user:get_followers", %{
           "cursor" => 0
         })
 
@@ -46,7 +46,7 @@ defmodule BrothTest.User.GetFollowersTest do
       Kousa.Follow.follow(t.user.id, following_id, true)
 
       ref =
-        WsClient.send_call(t.client_ws, "user:get_followers", %{
+        WsClient.send_call(t.user_ws, "user:get_followers", %{
           "cursor" => 0,
           "username" => username
         })
