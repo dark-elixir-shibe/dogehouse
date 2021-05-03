@@ -62,7 +62,7 @@ defmodule Beef.Schemas.User do
     field(:apiKey, :binary_id)
 
     # associations
-    has_one(:roomPermissions, Beef.Schemas.RoomPermission, foreign_key: :userId)
+    has_one(:roomPermissions, Beef.Schemas.RoomPermission, foreign_key: :userId, on_replace: :update)
     belongs_to(:botOwner, Beef.Schemas.User, foreign_key: :botOwnerId, type: :binary_id)
     belongs_to(:currentRoom, Room, foreign_key: :currentRoomId, type: :binary_id)
 
@@ -104,6 +104,13 @@ defmodule Beef.Schemas.User do
     changeset
     |> Map.put(:params, %{"roomPermissions" => permissions})
     |> cast_assoc(:roomPermissions, with: &RoomPermission.insert_changeset/2)
+  end
+
+  def change_perms(data, permissions) do
+    data
+    |> change
+    |> Map.put(:params, %{"roomPermissions" => permissions})
+    |> cast_assoc(:roomPermissions, with: &RoomPermission.update_changeset/2)
   end
 
   def changeset(data, attrs \\ %{}) do

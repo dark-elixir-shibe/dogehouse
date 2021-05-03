@@ -6,9 +6,10 @@ defmodule Broth.Message.Push do
   alias Broth.Message.Cast
 
   defmacro __using__(opts) do
-    opcode = if opts[:code] do
-      code_generator(opts[:code])
-    end
+    opcode =
+      if opts[:code] do
+        code_generator(opts[:code])
+      end
 
     quote do
       use Ecto.Schema

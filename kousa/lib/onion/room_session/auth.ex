@@ -1,6 +1,7 @@
 defmodule Onion.RoomSession.Auth do
   @moduledoc false
 
+  alias Beef.Repo
   alias Beef.Rooms
   alias Beef.Users
   alias Broth.Message.Room.AuthUpdate
@@ -30,7 +31,7 @@ defmodule Onion.RoomSession.Auth do
          {:ok, new_room} <- Rooms.replace_owner(room, user_id) do
       PubSub.broadcast(
         "room:" <> room.id,
-        %AuthUpdate{userId: user_id, auth: :owner, roomId: room.id}
+        %AuthUpdate{userId: user_id, level: :owner, roomId: room.id}
       )
 
       {:reply, :ok, %{state | room: new_room}}
@@ -47,22 +48,26 @@ defmodule Onion.RoomSession.Auth do
   # mod
 
   # only creators can set someone to be mod.
-  defp set_mod(room_id, user_id, setter_id) do
-    # TODO: refactor this to pull from preloads.
-    case Rooms.get_room_status(setter_id) do
-      {:creator, _} ->
-        RoomPermissions.set_is_mod(user_id, room_id, true)
+  defp set_mod(user_id, owner, state = %{room: room}) do
+    with :owner <- Users.room_auth(owner),
+         {:ok, new_user!} <- Users.set_auth(user_id, :mod) do
 
-        Onion.RoomSession.broadcast_ws(
-          room_id,
-          %{
-            op: "mod_changed",
-            d: %{roomId: room_id, userId: user_id}
-          }
-        )
+      new_user! = Repo.preload(new_user!, :currentRoom)
 
-      _ ->
-        :noop
+      PubSub.broadcast(
+        "room:" <> room.id,
+        %AuthUpdate{userId: user_id, level: :mod, roomId: room.id}
+      )
+
+      PubSub.broadcast("user:" <> new_user!.id, new_user!)
+
+      {:reply, :ok, %{state | room: new_user!.currentRoom}}
+    else
+      auth when auth in [:mod, :user] ->
+        {:reply, {:error, "permission denied"}, state}
+
+      error ->
+        {:reply, error, state}
     end
   end
 
@@ -70,40 +75,48 @@ defmodule Onion.RoomSession.Auth do
   # plain user
 
   # mods can demote their own mod status.
-  defp set_user(room_id, user_id, user_id) do
-    case Rooms.get_room_status(user_id) do
-      {:mod, _} ->
-        RoomPermissions.set_is_mod(user_id, room_id, true)
+  defp set_user(user_id, agent = %{id: user_id}, state = %{room: room}) do
+    with :mod <- Users.room_auth(agent),
+         {:ok, new_user!} <- Users.set_auth(user_id, :user) do
+      new_user = Repo.preload(new_user!, :currentRoom)
 
-        Onion.RoomSession.broadcast_ws(
-          room_id,
-          %{
-            op: "mod_changed",
-            d: %{roomId: room_id, userId: user_id}
-          }
-        )
+      PubSub.broadcast(
+        "room:" <> room.id,
+        %AuthUpdate{userId: user_id, level: :user, roomId: room.id}
+      )
 
-      _ ->
-        :noop
+      PubSub.broadcast("user:" <> new_user!.id, new_user!)
+
+      {:reply, :ok, %{state | room: new_user!.currentRoom}}
+    else
+      auth when auth in [:owner, :user] ->
+        {:reply, {:error, "permission denied"}, state}
+
+      error ->
+        {:reply, error, state}
     end
   end
 
   # only creators can demote mods
-  defp set_user(room_id, user_id, setter_id) do
-    case Rooms.get_room_status(setter_id) do
-      {:creator, _} ->
-        RoomPermissions.set_is_mod(user_id, room_id, false)
+  defp set_user(user_id, agent, state = %{room: room}) do
+    with :owner <- Users.room_auth(agent),
+         {:ok, new_user!} <- Users.set_auth(user_id, :user) do
+      new_user! = Repo.preload(new_user!, :currentRoom)
 
-        Onion.RoomSession.broadcast_ws(
-          room_id,
-          %{
-            op: "mod_changed",
-            d: %{roomId: room_id, userId: user_id}
-          }
-        )
+      PubSub.broadcast(
+        "room:" <> room.id,
+        %AuthUpdate{userId: user_id, level: :user, roomId: room.id}
+      )
 
-      _ ->
-        :noop
+      PubSub.broadcast("user:" <> new_user!.id, new_user!)
+
+      {:reply, :ok, %{state | room: new_user!.currentRoom}}
+    else
+      auth when auth in [:mod, :user] ->
+        {:reply, {:error, "permission denied"}, state}
+
+      error ->
+        {:reply, error, state}
     end
   end
 end

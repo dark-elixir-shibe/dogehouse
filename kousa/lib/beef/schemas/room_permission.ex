@@ -22,8 +22,8 @@ defmodule Beef.Schemas.RoomPermission do
     # :auth -> :owner, :mod, :guest, :anon
     # :role -> :speaker, :hand_raised, :listener
 
-    belongs_to(:user, User, foreign_key: :userId, type: :binary_id)
-    belongs_to(:room, Room, foreign_key: :roomId, type: :binary_id)
+    belongs_to(:user, User, foreign_key: :userId, type: :binary_id, primary_key: true)
+    belongs_to(:room, Room, foreign_key: :roomId, type: :binary_id, primary_key: true)
     field(:isSpeaker, :boolean, default: false)
     field(:isMod, :boolean, default: false)
     field(:askedToSpeak, :boolean, default: false)
@@ -37,6 +37,12 @@ defmodule Beef.Schemas.RoomPermission do
   def insert_changeset(roomPerm, attrs) do
     roomPerm
     |> cast(attrs, @fields)
+    |> validate_required(@fields)
+  end
+
+  def update_changeset(roomPerm, attrs) do
+    roomPerm
+    |> cast(attrs, [:isSpeaker, :isMod, :askedToSpeak])
     |> validate_required(@fields)
   end
 end

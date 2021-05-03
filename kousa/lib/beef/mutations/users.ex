@@ -1,10 +1,13 @@
 defmodule Beef.Mutations.Users do
   import Ecto.Query, warn: false
+  import Kousa.Utils.UUID, only: [is_uuid: 1]
 
   alias Beef.Repo
   alias Beef.Schemas.User
   alias Beef.Queries.Users, as: Query
   alias Beef.RoomPermissions
+
+  alias Ecto.Multi
 
   # create-update-delete BASICS
   def update(user, data) do
@@ -34,15 +37,44 @@ defmodule Beef.Mutations.Users do
     end
   end
 
-  ########################################################################
+  @changes %{
+    # auth changes
+    user: %{isMod: false},
+    mod: %{isMod: true},
+    # role changes
+    speaker: %{isSpeaker: true, askedToSpeak: false},
+    raised_hand: %{isSpeaker: false, askedToSpeak: true},
+    listener: %{isSpeaker: false, askedToSpeak: false}
+  }
 
-  def edit_profile(user_id, data) do
-    # TODO: make this not perform a db query
-    user_id
-    |> Beef.Users.get_by_id()
-    |> User.edit_changeset(data)
-    |> Repo.update()
+  def set_auth(user, auth), do: set_perms(user, auth)
+  def set_role(user, level), do: set_perms(user, level)
+
+  def set_perms(user = %User{}, value) do
+    user
+    |> User.change_perms(@changes[value])
+    |> Repo.update
   end
+
+  def set_perms(user_id, value) when is_uuid(user_id) do
+    Multi.new()
+    |> Multi.run(:fetch, &multi_fetch_user(&1, &2, user_id))
+    |> Multi.update(:update, &User.change_perms(&1.fetch, @changes[value]))
+    |> Repo.transaction()
+    |> case do
+      {:ok, multi} -> {:ok, multi.update}
+      error -> error
+    end
+  end
+
+  defp multi_fetch_user(_repo, _, user_id) do
+    case Beef.Users.get(user_id) do
+      nil -> {:error, "not present"}
+      user -> {:ok, user}
+    end
+  end
+
+  ########################################################################
 
   def bulk_insert(users) do
     Repo.insert_all(

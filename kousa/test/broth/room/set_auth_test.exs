@@ -41,29 +41,32 @@ defmodule BrothTest.Room.SetAuthTest do
       WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^speaker_id}})
 
       # make the person a mod
-      WsClient.send_msg(
-        t.user_ws,
-        "room:set_auth",
-        %{
-          "userId" => speaker_id,
-          "level" => "mod"
-        }
-      )
+      ref =
+        WsClient.send_call(
+          t.user_ws,
+          "room:set_auth",
+          %{
+            "userId" => speaker_id,
+            "level" => "mod"
+          }
+        )
+
+      WsClient.assert_empty_reply("room:set_auth:reply", ref)
 
       # both clients get notified
-      WsClient.assert_frame_legacy(
-        "mod_changed",
-        %{"userId" => ^speaker_id, "roomId" => ^room_id},
+      WsClient.assert_frame(
+        "room:auth_update",
+        %{"userId" => ^speaker_id, "level" => "mod", "roomId" => ^room_id},
         t.user_ws
       )
 
-      WsClient.assert_frame_legacy(
-        "mod_changed",
-        %{"userId" => ^speaker_id, "roomId" => ^room_id},
+      WsClient.assert_frame(
+        "room:auth_update",
+        %{"userId" => ^speaker_id, "level" => "mod", "roomId" => ^room_id},
         speaker_ws
       )
 
-      assert Beef.RoomPermissions.get(speaker_id, room_id).isMod
+      assert Beef.Users.get(speaker_id).roomPermissions.isMod
     end
   end
 

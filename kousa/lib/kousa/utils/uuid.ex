@@ -32,6 +32,9 @@ defmodule Kousa.Utils.UUID do
   defp lower(char) when char in ?A..?F, do: char - 32
   defp lower(char), do: char
 
+  # a crude uuid guard
+  defguard is_uuid(binary) when byte_size(binary) == 36
+
   # for convenience, an Ecto Changeset function
   import Ecto.Changeset
 
