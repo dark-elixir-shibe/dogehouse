@@ -164,8 +164,10 @@ defmodule BrothTest.WsClient do
     from! = if from!, do: {:^, [], from!}, else: {:_, [], Elixir}
 
     quote do
-      ExUnit.Assertions.assert_receive({:text, msg, unquote(from!)})
-      ExUnit.Assertions.assert(%{"op" => unquote(op), "ref" => ^unquote(ref)} = msg)
+      ExUnit.Assertions.assert_receive(
+        {:text,
+          msg = %{"op" => unquote(op), "ref" => ^unquote(ref)},
+          unquote(from!)})
       ExUnit.Assertions.assert(msg["p"] == %{})
       ExUnit.Assertions.refute(msg["e"])
     end

@@ -3,13 +3,13 @@ defmodule BrothTest.Message.Room.LeaveTest do
 
   @moduletag :message
 
-  alias Broth.Message.Room.Leave
+  alias Broth.Message.Types.Empty
 
   describe "when you send an leave message" do
     test "an empty payload is ok, but requires ref" do
       assert {:ok,
               %{
-                payload: %Leave{}
+                payload: %Empty{}
               }} =
                BrothTest.Support.Message.validate(%{
                  "operator" => "room:leave",
@@ -20,7 +20,7 @@ defmodule BrothTest.Message.Room.LeaveTest do
       # short form also allowed
       assert {:ok,
               %{
-                payload: %Leave{}
+                payload: %Empty{}
               }} =
                BrothTest.Support.Message.validate(%{
                  "op" => "room:leave",
