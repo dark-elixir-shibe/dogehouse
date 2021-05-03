@@ -95,7 +95,7 @@ defmodule BrothTest.Room.SetAuthTest do
       # NB: we get an extraneous speaker_added message here.
       WsClient.assert_frame(
         "room:auth_update",
-        %{"userId" => ^speaker_id, "auth" => "owner"}
+        %{"userId" => ^speaker_id, "level" => "owner"}
       )
 
       assert Beef.Rooms.get(room_id).creatorId == speaker_id
