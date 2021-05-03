@@ -1,89 +1,109 @@
 defmodule Onion.RoomSession.Auth do
   @moduledoc false
 
+  alias Beef.Rooms
+  alias Beef.Users
+  alias Broth.Message.Room.AuthUpdate
+  alias Onion.PubSub
+
   ## organizational module for handling Auth concerns for the
   ## RoomSession GenServer.
 
-####################################################################
-# owner
+  def set_auth_impl(user_id, opts, _reply, state) do
+    case opts[:to] do
+      :owner ->
+        set_owner(user_id, opts[:by], state)
 
-#def set_owner(room_id, user_id, setter_id) do
-#  with {:creator, _} <- Rooms.get_room_status(setter_id),
-#       {1, _} <- Rooms.replace_room_owner(setter_id, user_id) do
-#    internal_set_speaker(setter_id, room_id)
+      :mod ->
+        set_mod(user_id, opts[:by], state)
 
-#    Onion.RoomSession.broadcast_ws(
-#      room_id,
-#      %{
-#        op: "new_room_creator",
-#        d: %{roomId: room_id, userId: user_id}
-#      }
-#    )
-#  end
-#end
+      :user ->
+        set_user(user_id, opts[:by], state)
+    end
+  end
 
-####################################################################
-# mod
+  ####################################################################
+  # owner
 
-# only creators can set someone to be mod.
-defp set_mod(room_id, user_id, setter_id) do
-  # TODO: refactor this to pull from preloads.
-  case Rooms.get_room_status(setter_id) do
-    {:creator, _} ->
-      RoomPermissions.set_is_mod(user_id, room_id, true)
-
-      Onion.RoomSession.broadcast_ws(
-        room_id,
-        %{
-          op: "mod_changed",
-          d: %{roomId: room_id, userId: user_id}
-        }
+  def set_owner(user_id, owner, state = %{room: room}) do
+    with :owner <- Users.room_auth(owner),
+         {:ok, new_room} <- Rooms.replace_owner(room, user_id) do
+      PubSub.broadcast(
+        "room:" <> room.id,
+        %AuthUpdate{userId: user_id, auth: :owner, roomId: room.id}
       )
 
-    _ ->
-      :noop
+      {:reply, :ok, %{state | room: new_room}}
+    else
+      auth when auth in [:mod, :user] ->
+        {:reply, {:error, "permission denied"}, state}
+
+      error ->
+        {:reply, error, state}
+    end
   end
-end
 
-####################################################################
-# plain user
+  ####################################################################
+  # mod
 
-# mods can demote their own mod status.
-defp set_user(room_id, user_id, user_id) do
-  case Rooms.get_room_status(user_id) do
-    {:mod, _} ->
-      RoomPermissions.set_is_mod(user_id, room_id, true)
+  # only creators can set someone to be mod.
+  defp set_mod(room_id, user_id, setter_id) do
+    # TODO: refactor this to pull from preloads.
+    case Rooms.get_room_status(setter_id) do
+      {:creator, _} ->
+        RoomPermissions.set_is_mod(user_id, room_id, true)
 
-      Onion.RoomSession.broadcast_ws(
-        room_id,
-        %{
-          op: "mod_changed",
-          d: %{roomId: room_id, userId: user_id}
-        }
-      )
+        Onion.RoomSession.broadcast_ws(
+          room_id,
+          %{
+            op: "mod_changed",
+            d: %{roomId: room_id, userId: user_id}
+          }
+        )
 
-    _ ->
-      :noop
+      _ ->
+        :noop
+    end
   end
-end
 
-# only creators can demote mods
-defp set_user(room_id, user_id, setter_id) do
-  case Rooms.get_room_status(setter_id) do
-    {:creator, _} ->
-      RoomPermissions.set_is_mod(user_id, room_id, false)
+  ####################################################################
+  # plain user
 
-      Onion.RoomSession.broadcast_ws(
-        room_id,
-        %{
-          op: "mod_changed",
-          d: %{roomId: room_id, userId: user_id}
-        }
-      )
+  # mods can demote their own mod status.
+  defp set_user(room_id, user_id, user_id) do
+    case Rooms.get_room_status(user_id) do
+      {:mod, _} ->
+        RoomPermissions.set_is_mod(user_id, room_id, true)
 
-    _ ->
-      :noop
+        Onion.RoomSession.broadcast_ws(
+          room_id,
+          %{
+            op: "mod_changed",
+            d: %{roomId: room_id, userId: user_id}
+          }
+        )
+
+      _ ->
+        :noop
+    end
   end
-end
 
+  # only creators can demote mods
+  defp set_user(room_id, user_id, setter_id) do
+    case Rooms.get_room_status(setter_id) do
+      {:creator, _} ->
+        RoomPermissions.set_is_mod(user_id, room_id, false)
+
+        Onion.RoomSession.broadcast_ws(
+          room_id,
+          %{
+            op: "mod_changed",
+            d: %{roomId: room_id, userId: user_id}
+          }
+        )
+
+      _ ->
+        :noop
+    end
+  end
 end

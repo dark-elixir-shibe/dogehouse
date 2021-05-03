@@ -68,7 +68,7 @@ defmodule BrothTest.Room.SetAuthTest do
   end
 
   describe "the set_auth command can" do
-    test "makes the person a room_creator", t do
+    test "transfer room_creator-ship", t do
       room_id = t.room_id
 
       # make sure the user is in there.
@@ -84,20 +84,21 @@ defmodule BrothTest.Room.SetAuthTest do
       WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^speaker_id}})
 
       # make the person a room creator.
-      ref = WsClient.send_call(t.user_ws, "room:set_auth", %{
-        "userId" => speaker_id,
-        "level" => "owner"
-      })
+      ref =
+        WsClient.send_call(t.user_ws, "room:set_auth", %{
+          "userId" => speaker_id,
+          "level" => "owner"
+        })
 
       WsClient.assert_empty_reply("room:set_auth:reply", ref)
 
       # NB: we get an extraneous speaker_added message here.
-      WsClient.assert_frame_legacy(
-        "new_room_creator",
-        %{"userId" => ^speaker_id, "roomId" => ^room_id}
+      WsClient.assert_frame(
+        "room:auth_update",
+        %{"userId" => ^speaker_id, "auth" => "owner"}
       )
 
-      assert Beef.Rooms.get_room_by_id(room_id).creatorId == speaker_id
+      assert Beef.Rooms.get(room_id).creatorId == speaker_id
       assert Process.alive?(t.user_ws)
     end
 

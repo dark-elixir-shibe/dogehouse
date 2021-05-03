@@ -10,5 +10,4 @@ defmodule Broth.Message.Types.Empty do
   @primary_key false
   embedded_schema do
   end
-
 end

@@ -67,4 +67,8 @@ defmodule Beef.Schemas.Room do
     |> validate_length(:name, min: 2, max: 60)
     |> validate_length(:description, max: 500)
   end
+
+  def change_owner(room, attrs) do
+    cast(room, attrs, [:creatorId])
+  end
 end

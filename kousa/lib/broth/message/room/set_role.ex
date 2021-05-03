@@ -25,9 +25,9 @@ defmodule Broth.Message.Room.SetRole do
     |> UUID.normalize(:id)
   end
 
-  def execute(changeset, state) do
+  def execute(changeset, state = %{user: owner}) do
     with {:ok, %{userId: user_id, role: role}} <- apply_action(changeset, :validate),
-         :ok <- Kousa.Room.set_role(user_id, to: role, by: state.user.id) do
+         :ok <- Kousa.Room.set_role(owner.currentRoomId, user_id, to: role, by: state.user) do
       {:reply, %Empty{}, state}
     end
   end

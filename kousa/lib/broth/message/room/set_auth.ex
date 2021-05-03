@@ -19,9 +19,9 @@ defmodule Broth.Message.Room.SetAuth do
     |> UUID.normalize(:userId)
   end
 
-  def execute(changeset, state) do
-    with {:ok, %{userId: user_id, level: level}} <- apply_action(changeset, :validate) do
-      Kousa.Room.set_auth(user_id, level, by: state.user.id)
+  def execute(changeset, state = %{user: user}) do
+    with {:ok, %{userId: user_id, level: level}} <- apply_action(changeset, :validate),
+         :ok <- Kousa.Room.set_auth(user.currentRoomId, user_id, to: level, by: user) do
       {:reply, %Empty{}, state}
     end
   end

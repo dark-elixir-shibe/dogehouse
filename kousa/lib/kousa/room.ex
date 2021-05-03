@@ -104,7 +104,7 @@ defmodule Kousa.Room do
   ###################################################################
   ## AUTH
 
-  @type auth_opts :: [by: UUID.t, to: Broth.Message.Types.RoomRole.t]
+  @type auth_opts :: [by: UUID.t(), to: Broth.Message.Types.RoomRole.t()]
 
   @doc """
   sets the role of the user in the room that they're in.
@@ -113,15 +113,15 @@ defmodule Kousa.Room do
 
   Authorization to do so is pulled from the options `:by` keyword.
   """
-  @spec set_auth(User.t, auth_opts) :: :ok | {:error, term}
-  def set_auth(user = %{currentRoomId: room_id}, opts) do
-    Onion.RoomSession.set_auth(room_id, user, opts)
+  @spec set_auth(User.t(), UUID.t(), auth_opts) :: :ok | {:error, term}
+  def set_auth(room_id, target_id, opts) do
+    Onion.RoomSession.set_auth(room_id, target_id, opts)
   end
 
   ####################################################################
   ## ROLE
 
-  @type role_opts :: [by: UUID.t, to: Broth.Message.Types.RoomRole.t]
+  @type role_opts :: [by: UUID.t(), to: Broth.Message.Types.RoomRole.t()]
 
   @doc """
   sets the role of the user in the room that they're in.
@@ -130,9 +130,9 @@ defmodule Kousa.Room do
 
   Authorization to do so is pulled from the options `:by` keyword.
   """
-  @spec set_role(User.t, role_opts) :: :ok | {:error, term}
-  def set_role(user = %{currentRoomId: room_id}, opts) do
-    Onion.RoomSession.set_role(room_id, user, opts)
+  @spec set_role(UUID.t(), UUID.t(), role_opts) :: :ok | {:error, term}
+  def set_role(room_id, target_id, opts) do
+    Onion.RoomSession.set_role(room_id, target_id, opts)
   end
 
   ######################################################################

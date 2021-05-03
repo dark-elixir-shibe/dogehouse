@@ -117,8 +117,8 @@ defmodule Broth.SocketHandler do
   ##########################################################################
   ## USER UPDATES
 
-  def room_update_impl({"room:" <> room_id, msg}, state = %{user: %{currentRoomId: room_id}}) do
-    %Broth.Message{operator: "room:joined", payload: msg}
+  def room_update_impl({"room:" <> room_id, msg = %op{}}, state = %{user: %{currentRoomId: room_id}}) do
+    %Broth.Message{operator: op.code(), payload: msg}
     |> adopt_version(state)
     |> prepare_socket_msg(state)
     |> ws_push(state)

@@ -176,11 +176,12 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.do_call(t.user_ws, "room:set_auth", %{"userId" => mod_id, "level" => "mod"})
 
       # add the person as a speaker.
-      ref = WsClient.send_call(
-        mod_ws,
-        "room:set_role",
-        %{"userId" => speaker_id, "role" => "speaker"}
-      )
+      ref =
+        WsClient.send_call(
+          mod_ws,
+          "room:set_role",
+          %{"userId" => speaker_id, "role" => "speaker"}
+        )
 
       WsClient.assert_reply("room:set_role:reply", ref, _)
 

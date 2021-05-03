@@ -6,6 +6,12 @@ defmodule Beef.Mutations.Rooms do
   alias Beef.Users
   alias Beef.Schemas.User
 
+  def replace_owner(room, user_id) do
+    room
+    |> Room.change_owner(%{creatorId: user_id})
+    |> Repo.update()
+  end
+
   def set_room_privacy_by_creator_id(user_id, isPrivate, new_name) do
     from(r in Room,
       where: r.creatorId == ^user_id,
@@ -20,32 +26,8 @@ defmodule Beef.Mutations.Rooms do
     |> Repo.update_all([])
   end
 
-  def increment_room_people_count(room_id) do
-    from(u in Room,
-      where: u.id == ^room_id,
-      update: [
-        inc: [
-          numPeopleInside: 1
-        ]
-      ]
-    )
-    |> Repo.update_all([])
-  end
-
   def delete_room_by_id(room_id) do
     %Room{id: room_id} |> Repo.delete()
-  end
-
-  def replace_room_owner(user_id, new_creator_id) do
-    from(r in Room,
-      where: r.creatorId == ^user_id,
-      update: [
-        set: [
-          creatorId: ^new_creator_id
-        ]
-      ]
-    )
-    |> Repo.update_all([])
   end
 
   # trusts that the user is in the room

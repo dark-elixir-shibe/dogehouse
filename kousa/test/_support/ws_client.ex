@@ -162,6 +162,7 @@ defmodule BrothTest.WsClient do
 
   defmacro assert_empty_reply(op, ref, from! \\ nil) do
     from! = if from!, do: {:^, [], from!}, else: {:_, [], Elixir}
+
     quote do
       ExUnit.Assertions.assert_receive({:text, msg, unquote(from!)})
       ExUnit.Assertions.assert(%{"op" => unquote(op), "ref" => ^unquote(ref)} = msg)

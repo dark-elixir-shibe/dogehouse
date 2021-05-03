@@ -20,26 +20,6 @@ defmodule Beef.Access.Rooms do
     |> Repo.one()
   end
 
-  def get_room_status(user_id) do
-    room = Users.get_current_room(user_id)
-
-    cond do
-      is_nil(room) ->
-        {nil, nil}
-
-      room.creatorId == user_id ->
-        {:creator, room}
-
-      true ->
-        {case RoomPermissions.get(user_id, room.id) do
-           %{isMod: true} -> :mod
-           %{isSpeaker: true} -> :speaker
-           %{askedToSpeak: true} -> :askedToSpeak
-           _ -> :listener
-         end, room}
-    end
-  end
-
   def get_top_public_rooms(user_id, offset \\ 0) do
     max_room_size = Application.fetch_env!(:kousa, :max_room_size)
 

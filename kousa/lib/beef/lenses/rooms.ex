@@ -1,4 +1,6 @@
 defmodule Beef.Lenses.Rooms do
+  require Logger
+  alias Beef.Repo
   alias Beef.Schemas.Room
   alias Kousa.Utils.UUID
 
@@ -24,4 +26,17 @@ defmodule Beef.Lenses.Rooms do
   end
 
   def can_join(_, _), do: :ok
+
+  @spec count_attendees(Room.t()) :: non_neg_integer
+  def count_attendees(%{attendees: list}) when is_list(list) do
+    length(list)
+  end
+
+  def count_attendees(room = %{attendees: %Ecto.Association.NotLoaded{}}) do
+    Logger.warn("Rooms.count_attendees/1 called without preloading attendees")
+
+    room
+    |> Repo.preload(:attendees)
+    |> count_attendees
+  end
 end

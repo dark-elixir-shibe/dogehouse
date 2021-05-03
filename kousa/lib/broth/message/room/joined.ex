@@ -3,7 +3,8 @@ defmodule Broth.Message.Room.Joined do
   # by Phoenix.Tracker content.  DO NOT COPY/PASTE THIS CONTENT WITHOUT ASKING
   # FIRST
 
-  use Broth.Message.Push
+  use Broth.Message.Push,
+    code: "room:joined"
 
   @derive {Jason.Encoder, only: [:user, :muteMap, :deafMap]}
 

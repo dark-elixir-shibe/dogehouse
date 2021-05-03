@@ -46,6 +46,10 @@ defmodule Beef.Users do
   # MUTATIONS
   defdelegate update(changeset), to: Beef.Repo
 
+  # LENSES
+  defdelegate room_role(user), to: Beef.Lenses.Users
+  defdelegate room_auth(user), to: Beef.Lenses.Users
+
   defdelegate join_room(user, room_id, opts), to: Beef.Mutations.Users
 
   defdelegate edit_profile(user_id, data), to: Beef.Mutations.Users

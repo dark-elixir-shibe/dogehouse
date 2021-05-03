@@ -12,9 +12,13 @@ defmodule BrothTest.Message.Room.JoinedTest do
     msg = %Broth.Message.Room.Joined{
       user: user,
       muteMap: MapSet.new([mute_uuid]),
-      deafMap: MapSet.new([deaf_uuid])}
+      deafMap: MapSet.new([deaf_uuid])
+    }
 
-      assert %{"user" => %{"id" => ^user_id}, "muteMap" => %{^mute_uuid => true}, "deafMap" => %{^deaf_uuid => true}}
-        = Jason.decode!(Jason.encode!(msg))
+    assert %{
+             "user" => %{"id" => ^user_id},
+             "muteMap" => %{^mute_uuid => true},
+             "deafMap" => %{^deaf_uuid => true}
+           } = Jason.decode!(Jason.encode!(msg))
   end
 end

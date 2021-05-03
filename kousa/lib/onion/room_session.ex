@@ -291,24 +291,35 @@ defmodule Onion.RoomSession do
   end
 
   ###################################################################
-  ## SET ROLE
+  ## SET AUTH
 
-  def set_role(room_id, user, opts) do
-    call(room_id, {:set_role, user, opts})
+  def set_auth(room_id, user_id, opts) do
+    call(room_id, {:set_auth, user_id, opts})
   end
 
-  defp set_role_impl(user, opts, _reply, state) do
+  # get the implementation from the other module.
+  import Onion.RoomSession.Auth, only: [set_auth_impl: 4]
+
+  ###################################################################
+  ## SET ROLE
+
+  def set_role(room_id, user_id, opts) do
+    call(room_id, {:set_role, user_id, opts})
+  end
+
+  defp set_role_impl(user_id, opts, _reply, state) do
     case opts[:to] do
-      role -> IO.inspect(role)
+      role ->
+        IO.inspect(role)
         raise "XXX"
-      #:listener ->
-      #  set_listener(room_id, user_id, opts[:by])
-#
-      #:speaker ->
-      #  set_speaker(room_id, user_id, opts[:by])
-#
-      #:raised_hand ->
-      #  set_raised_hand(room_id, user_id, opts[:by])
+        # :listener ->
+        #  set_listener(room_id, user_id, opts[:by])
+        #
+        # :speaker ->
+        #  set_speaker(room_id, user_id, opts[:by])
+        #
+        # :raised_hand ->
+        #  set_raised_hand(room_id, user_id, opts[:by])
     end
   end
 
@@ -556,6 +567,10 @@ defmodule Onion.RoomSession do
 
   def handle_call({:join, user, opts}, reply, state) do
     join_impl(user, opts, reply, state)
+  end
+
+  def handle_call({:set_auth, user, opts}, reply, state) do
+    set_auth_impl(user, opts, reply, state)
   end
 
   def handle_call({:set_role, user, opts}, reply, state) do
