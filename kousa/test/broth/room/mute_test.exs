@@ -33,14 +33,14 @@ defmodule BrothTest.Room.MuteTest do
 
       # mute ON
       ref = WsClient.send_call(t.user_ws, "room:mute", %{"muted" => true})
-      WsClient.assert_reply("room:mute:reply", ref, _)
+      WsClient.assert_empty_reply(ref)
       Process.sleep(100)
       map = Onion.RoomSession.get(room_id, :muteMap)
       assert is_map_key(map, t.user.id)
 
       # mute OFF
       ref = WsClient.send_call(t.user_ws, "room:mute", %{"muted" => false})
-      WsClient.assert_reply("room:mute:reply", ref, _)
+      WsClient.assert_empty_reply(ref)
       Process.sleep(100)
       map = Onion.RoomSession.get(room_id, :muteMap)
       refute is_map_key(map, t.user.id)
@@ -54,7 +54,7 @@ defmodule BrothTest.Room.MuteTest do
 
       ref = WsClient.send_call(t.user_ws, "room:mute", %{"muted" => false})
 
-      WsClient.assert_reply("room:mute:reply", ref, _)
+      WsClient.assert_empty_reply(ref)
 
       map = Onion.RoomSession.get(room_id, :muteMap)
 

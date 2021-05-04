@@ -29,11 +29,7 @@ defmodule BrothTest.Room.GetInfoTest do
 
       ref = WsClient.send_call(t.user_ws, "room:get_info", %{"id" => room_id})
 
-      WsClient.assert_reply(
-        "room:get_info:reply",
-        ref,
-        %{"id" => ^room_id, "name" => "foo room"}
-      )
+      WsClient.assert_reply(ref, %{"id" => ^room_id, "name" => "foo room"})
     end
 
     test "if you don't supply id, then you'll get the room you're in", t do
@@ -46,11 +42,7 @@ defmodule BrothTest.Room.GetInfoTest do
           %{}
         )
 
-      WsClient.assert_reply(
-        "room:get_info:reply",
-        ref,
-        %{"id" => ^room_id, "name" => "foo room"}
-      )
+      WsClient.assert_reply(ref, %{"id" => ^room_id, "name" => "foo room"})
     end
 
     @tag :skip

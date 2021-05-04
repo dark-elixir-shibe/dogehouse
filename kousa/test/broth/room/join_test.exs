@@ -36,16 +36,12 @@ defmodule BrothTest.Room.JoinTest do
           %{"roomId" => room_id}
         )
 
-      WsClient.assert_reply(
-        "room:join:reply",
-        ref,
-        %{
-          "description" => "foo",
-          "id" => room_id,
-          "name" => "foo room",
-          "isPrivate" => false
-        }
-      )
+      WsClient.assert_reply(ref, %{
+        "description" => "foo",
+        "id" => room_id,
+        "name" => "foo room",
+        "isPrivate" => false
+      })
 
       assert %{currentRoomId: ^room_id} = Users.get_by_id(other.id)
     end

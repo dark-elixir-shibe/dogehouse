@@ -49,14 +49,7 @@ defmodule BrothTest.Room.GetBannedUsersTest do
 
       banned_user_id = user_to_ban.id
 
-      WsClient.assert_reply(
-        "room:get_banned_users:reply",
-        ref,
-        %{
-          "users" => [%{"id" => ^banned_user_id}]
-        },
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"users" => [%{"id" => ^banned_user_id}]})
     end
 
     test "returns what if you're not in a room", t do
@@ -67,12 +60,7 @@ defmodule BrothTest.Room.GetBannedUsersTest do
           %{}
         )
 
-      WsClient.assert_reply(
-        "room:get_banned_users:reply",
-        ref,
-        %{"users" => []},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"users" => []})
     end
   end
 end

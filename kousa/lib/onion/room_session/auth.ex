@@ -51,7 +51,6 @@ defmodule Onion.RoomSession.Auth do
   defp set_mod(user_id, owner, state = %{room: room}) do
     with :owner <- Users.room_auth(owner),
          {:ok, new_user!} <- Users.set_auth(user_id, :mod) do
-
       new_user! = Repo.preload(new_user!, :currentRoom)
 
       PubSub.broadcast(

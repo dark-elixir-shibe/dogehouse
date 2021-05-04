@@ -28,7 +28,7 @@ defmodule BrothTest.User.BanTest do
           "reason" => "you're a douche"
         })
 
-      WsClient.assert_error("user:ban", ref, %{"message" => message})
+      WsClient.assert_error(ref, %{"message" => message})
       assert message =~ "but that user didn't exist"
     end
 
@@ -48,8 +48,7 @@ defmodule BrothTest.User.BanTest do
           "reason" => "you're a douche"
         })
 
-      WsClient.assert_reply("user:ban:reply", ref, reply)
-      refute is_map_key(reply, "error")
+      WsClient.assert_empty_reply(ref)
 
       # this frame is targetted to the banned user
       WsClient.assert_frame_legacy("banned", _, banned_ws)

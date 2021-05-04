@@ -32,12 +32,7 @@ defmodule BrothTest.Room.GetInviteListTest do
 
       ref = WsClient.send_call(t.user_ws, "room:get_invite_list", %{"cursor" => 0})
 
-      WsClient.assert_reply(
-        "room:get_invite_list:reply",
-        ref,
-        %{"invites" => [%{"id" => ^follower_id}]},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"invites" => [%{"id" => ^follower_id}]})
     end
   end
 end

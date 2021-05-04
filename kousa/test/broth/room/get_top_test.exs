@@ -38,12 +38,7 @@ defmodule BrothTest.Room.GetTopTest do
           %{}
         )
 
-      WsClient.assert_reply(
-        "room:get_top:reply",
-        ref,
-        %{"rooms" => [%{"id" => ^room_id}]},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"rooms" => [%{"id" => ^room_id}]})
     end
 
     test "doesn't return a room if it's private", t do
@@ -66,12 +61,7 @@ defmodule BrothTest.Room.GetTopTest do
           %{}
         )
 
-      WsClient.assert_reply(
-        "room:get_top:reply",
-        ref,
-        %{"rooms" => []},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"rooms" => []})
     end
 
     @tag :skip

@@ -30,13 +30,7 @@ defmodule BrothTest.User.UpdateTest do
           }
         )
 
-      WsClient.assert_reply(
-        "user:update:reply",
-        ref,
-        %{
-          "username" => "new_username"
-        }
-      )
+      WsClient.assert_reply(ref, %{"username" => "new_username"})
 
       # and we will get a second reply, but that's for the case where
       # there are multiple ws out for the same user.
@@ -82,7 +76,6 @@ defmodule BrothTest.User.UpdateTest do
         )
 
       WsClient.assert_reply(
-        "user:update:reply",
         ref,
         %{
           "bio" => "hi",

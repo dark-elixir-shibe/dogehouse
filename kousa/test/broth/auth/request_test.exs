@@ -54,7 +54,7 @@ defmodule BrothTest.Auth.RequestTest do
           "deafen" => false
         })
 
-      WsClient.assert_reply("auth:request:reply", ref, %{"id" => ^user_id})
+      WsClient.assert_reply(ref, %{"id" => ^user_id})
     end
 
     test "no deafen", %{tokens: tokens, user_id: user_id} do
@@ -74,7 +74,7 @@ defmodule BrothTest.Auth.RequestTest do
           "deafen" => false
         })
 
-      WsClient.assert_reply("auth:request:reply", ref, %{"id" => ^user_id})
+      WsClient.assert_reply(ref, %{"id" => ^user_id})
 
       %{"id" => room_id} =
         WsClient.do_call(
@@ -94,7 +94,7 @@ defmodule BrothTest.Auth.RequestTest do
           "muted" => false
         })
 
-      WsClient.assert_reply("auth:request:reply", ref2, %{"id" => ^user_id})
+      WsClient.assert_reply(ref2, %{"id" => ^user_id})
     end
 
     test "fails auth if the accessToken is borked" do

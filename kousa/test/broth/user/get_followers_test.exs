@@ -32,7 +32,7 @@ defmodule BrothTest.User.GetFollowersTest do
           "cursor" => 0
         })
 
-      WsClient.assert_reply("user:get_followers:reply", ref, %{
+      WsClient.assert_reply(ref, %{
         "followers" => [
           %{
             "id" => ^follower_id
@@ -53,7 +53,7 @@ defmodule BrothTest.User.GetFollowersTest do
 
       user_id = t.user.id
 
-      WsClient.assert_reply("user:get_followers:reply", ref, %{
+      WsClient.assert_reply(ref, %{
         "followers" => [
           %{
             "id" => ^user_id

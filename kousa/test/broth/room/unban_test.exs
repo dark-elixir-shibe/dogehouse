@@ -49,7 +49,7 @@ defmodule BrothTest.Room.UnbanTest do
           %{"userId" => blocked_id}
         )
 
-      WsClient.assert_reply("room:unban:reply", ref, %{}, t.user_ws)
+      WsClient.assert_empty_reply(ref)
 
       refute Beef.RoomBlocks.blocked?(room_id, blocked_id)
     end

@@ -149,8 +149,7 @@ defmodule BrothTest.WsClient do
     quote do
       {op, ref, from} = unquote(ref)
       reply_op = op <> ":reply"
-      ExUnit.Assertions.assert_receive(
-        {:text, msg = %{"op" => ^reply_op, "ref" => ^ref}, ^from})
+      ExUnit.Assertions.assert_receive({:text, msg = %{"op" => ^reply_op, "ref" => ^ref}, ^from})
       ExUnit.Assertions.assert(msg["p"] == %{})
       ExUnit.Assertions.refute(msg["e"])
     end
@@ -163,26 +162,14 @@ defmodule BrothTest.WsClient do
   Note that the third parameter is matchable, so you can use `_`, use
   it to assign a to a variable, or, do partial matches on the error.
   """
-  defmacro assert_error(op, ref, error, from \\ nil) do
-    if from do
-      quote do
-        op = unquote(op)
-        from = unquote(from)
-        ref = unquote(ref)
+  defmacro assert_error(ref, error) do
+    quote do
+      {op, ref, from} = unquote(ref)
+      reply_op = op <> ":reply"
 
-        ExUnit.Assertions.assert_receive(
-          {:text, %{"op" => ^op, "e" => unquote(error), "ref" => ^ref}, ^from}
-        )
-      end
-    else
-      quote do
-        op = unquote(op)
-        ref = unquote(ref)
-
-        ExUnit.Assertions.assert_receive(
-          {:text, %{"op" => ^op, "e" => unquote(error), "ref" => ^ref}, _}
-        )
-      end
+      ExUnit.Assertions.assert_receive(
+        {:text, %{"op" => ^reply_op, "e" => unquote(error), "ref" => ^ref}, ^from}
+      )
     end
   end
 

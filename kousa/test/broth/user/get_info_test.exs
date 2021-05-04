@@ -27,13 +27,7 @@ defmodule BrothTest.User.GetInfoTest do
           %{"userIdOrUsername" => t.user.id}
         )
 
-      WsClient.assert_reply(
-        "user:get_info:reply",
-        ref,
-        %{
-          "id" => ^user_id
-        }
-      )
+      WsClient.assert_reply(ref, %{"id" => ^user_id})
     end
 
     test "you get nil back for username that doesn't exist", t do
@@ -46,11 +40,7 @@ defmodule BrothTest.User.GetInfoTest do
           %{"userIdOrUsername" => "aosifdjoqwejfoq"}
         )
 
-      WsClient.assert_reply(
-        "user:get_info:reply",
-        ref,
-        %{"error" => "could not find user"}
-      )
+      WsClient.assert_reply(ref, %{"error" => "could not find user"})
     end
 
     @tag :skip

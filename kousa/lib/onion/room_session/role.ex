@@ -1,5 +1,4 @@
 defmodule Onion.RoomSession.Role do
-
   alias Broth.Message.Room.RoleUpdate
   alias Beef.Repo
   alias Beef.Users
@@ -10,10 +9,10 @@ defmodule Onion.RoomSession.Role do
   def set_role_impl(user_id, opts, _reply, state) do
     case opts[:to] do
       :listener ->
-       set_listener(user_id, opts[:by], state)
+        set_listener(user_id, opts[:by], state)
 
       :speaker ->
-       set_speaker(user_id, opts[:by], state)
+        set_speaker(user_id, opts[:by], state)
 
       :raised_hand ->
         set_raised_hand(user_id, opts[:by], state)
@@ -37,6 +36,7 @@ defmodule Onion.RoomSession.Role do
     case Users.room_auth(agent) do
       auth when auth in @authorized ->
         do_set_listener(user_id, state)
+
       _ ->
         {:reply, {:error, "permission denied"}, state}
     end
@@ -55,6 +55,7 @@ defmodule Onion.RoomSession.Role do
         PubSub.broadcast("user:" <> user_id, new_user!)
 
         {:reply, :ok, %{state | room: new_user!.currentRoom}}
+
       error ->
         {:reply, error, state}
     end
@@ -66,7 +67,7 @@ defmodule Onion.RoomSession.Role do
   # only owners and mods are allowed to set speaker
   defp set_speaker(user_id, agent, state = %{room: room}) do
     with auth when auth in @authorized <- Users.room_auth(agent),
-        {:ok, new_user!} <- Users.set_role(user_id, :speaker)  do
+         {:ok, new_user!} <- Users.set_role(user_id, :speaker) do
       new_user! = Repo.preload(new_user!, :currentRoom)
 
       PubSub.broadcast(
@@ -80,6 +81,7 @@ defmodule Onion.RoomSession.Role do
     else
       :listener ->
         {:reply, {:error, "permission denied"}, state}
+
       error ->
         {:reply, error, state}
     end
@@ -102,7 +104,8 @@ defmodule Onion.RoomSession.Role do
 
         {:reply, :ok, %{state | room: new_user!.currentRoom}}
 
-      error -> {:reply, error, state}
+      error ->
+        {:reply, error, state}
     end
   end
 

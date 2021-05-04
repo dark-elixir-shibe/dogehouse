@@ -35,7 +35,6 @@ defmodule BrothTest.Room.CreateTest do
         )
 
       WsClient.assert_reply(
-        "room:create:reply",
         ref,
         %{
           "creatorId" => ^user_id,
@@ -63,7 +62,6 @@ defmodule BrothTest.Room.CreateTest do
         )
 
       WsClient.assert_reply(
-        "room:create:reply",
         ref,
         %{
           "creatorId" => ^user_id,
@@ -93,7 +91,6 @@ defmodule BrothTest.Room.CreateTest do
         )
 
       WsClient.assert_reply(
-        "room:create:reply",
         ref,
         %{
           "creatorId" => ^user_id,

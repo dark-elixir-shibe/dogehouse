@@ -30,12 +30,7 @@ defmodule BrothTest.User.GetRelationshipTest do
           %{"userId" => user_id}
         )
 
-      WsClient.assert_reply(
-        "user:get_relationship:reply",
-        ref,
-        %{"relationship" => "self"},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"relationship" => "self"})
 
       ref =
         WsClient.send_call(
@@ -44,12 +39,7 @@ defmodule BrothTest.User.GetRelationshipTest do
           %{"userId" => followed_id}
         )
 
-      WsClient.assert_reply(
-        "user:get_relationship:reply",
-        ref,
-        %{"relationship" => nil},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"relationship" => nil})
 
       ref =
         WsClient.send_call(
@@ -58,12 +48,7 @@ defmodule BrothTest.User.GetRelationshipTest do
           %{"userId" => user_id}
         )
 
-      WsClient.assert_reply(
-        "user:get_relationship:reply",
-        ref,
-        %{"relationship" => nil},
-        followed_ws
-      )
+      WsClient.assert_reply(ref, %{"relationship" => nil})
 
       Kousa.Follow.follow(t.user.id, followed_id, true)
       Kousa.Follow.follow(followed_id, t.user.id, true)

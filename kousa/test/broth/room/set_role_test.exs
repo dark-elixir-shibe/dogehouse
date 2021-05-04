@@ -34,7 +34,7 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.do_call(t.user_ws, "room:set_role", %{"userId" => speaker_id, "role" => "speaker"})
       WsClient.assert_frame("room:role_update", x)
 
-      assert :speaker == speaker_id |> Users.get |> Users.room_role
+      assert :speaker == speaker_id |> Users.get() |> Users.room_role()
 
       WsClient.send_call(t.user_ws, "room:set_role", %{
         "userId" => speaker_id,
@@ -53,7 +53,7 @@ defmodule BrothTest.Room.SetRoleTest do
         speaker_ws
       )
 
-      assert :listener == speaker_id |> Users.get |> Users.room_role
+      assert :listener == speaker_id |> Users.get() |> Users.room_role()
     end
 
     @tag :skip
@@ -78,22 +78,32 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.do_call(speaker_ws, "room:join", %{"roomId" => room_id})
       WsClient.assert_frame("room:joined", _)
 
-      assert :listener == speaker_id |> Users.get |> Users.room_role
+      assert :listener == speaker_id |> Users.get() |> Users.room_role()
 
       # add the person as a speaker.
-      ref = WsClient.send_call(
-        t.user_ws,
-        "room:set_role",
-        %{"userId" => speaker_id, "role" => "speaker"}
-      )
+      ref =
+        WsClient.send_call(
+          t.user_ws,
+          "room:set_role",
+          %{"userId" => speaker_id, "role" => "speaker"}
+        )
 
       WsClient.assert_empty_reply("room:set_role:reply", ref)
 
       # both clients get notified
-      WsClient.assert_frame("room:role_update", %{"userId" => ^speaker_id, "role" => "speaker"}, t.user_ws)
-      WsClient.assert_frame("room:role_update", %{"userId" => ^speaker_id, "role" => "speaker"}, speaker_ws)
+      WsClient.assert_frame(
+        "room:role_update",
+        %{"userId" => ^speaker_id, "role" => "speaker"},
+        t.user_ws
+      )
 
-      assert :speaker == speaker_id |> Users.get |> Users.room_role
+      WsClient.assert_frame(
+        "room:role_update",
+        %{"userId" => ^speaker_id, "role" => "speaker"},
+        speaker_ws
+      )
+
+      assert :speaker == speaker_id |> Users.get() |> Users.room_role()
     end
 
     test "ask to speak makes you a speaker when auto speaker is on", t do
@@ -105,13 +115,13 @@ defmodule BrothTest.Room.SetRoleTest do
       # join the speaker user into the room
       WsClient.do_call(speaker_ws, "room:join", %{"roomId" => room_id})
 
-      assert :listener == speaker_id |> Users.get |> Users.room_role
+      assert :listener == speaker_id |> Users.get() |> Users.room_role()
 
       ref = WsClient.send_call(speaker_ws, "room:set_role", %{"role" => "raised_hand"})
       WsClient.assert_empty_reply("room:set_role:reply", ref)
 
       WsClient.assert_frame("user:update", _)
-      assert :raised_hand == speaker_id |> Users.get |> Users.room_role
+      assert :raised_hand == speaker_id |> Users.get() |> Users.room_role()
 
       # both clients get notified
       WsClient.assert_frame(
@@ -136,7 +146,7 @@ defmodule BrothTest.Room.SetRoleTest do
       speaker = %{id: speaker_id} = Factory.create(User)
       speaker_ws = WsClientFactory.create_client_for(speaker)
 
-      refute :speaker == speaker.id |> Beef.Users.get |> Beef.Users.room_role
+      refute :speaker == speaker.id |> Beef.Users.get() |> Beef.Users.room_role()
 
       # join the speaker user into the room
       WsClient.do_call(speaker_ws, "room:join", %{"roomId" => room_id})
@@ -144,14 +154,15 @@ defmodule BrothTest.Room.SetRoleTest do
       WsClient.assert_frame("room:joined", %{"user" => %{"id" => ^speaker_id}})
 
       # add the person as a speaker.
-      ref = WsClient.send_call(
-        t.user_ws,
-        "room:set_role",
-        %{"userId" => speaker_id, "role" => "speaker"}
-      )
+      ref =
+        WsClient.send_call(
+          t.user_ws,
+          "room:set_role",
+          %{"userId" => speaker_id, "role" => "speaker"}
+        )
 
-      WsClient.assert_empty_reply("room:set_role:reply", ref)
-      assert :speaker == speaker.id |> Beef.Users.get |> Beef.Users.room_role
+      WsClient.assert_empty_reply(ref)
+      assert :speaker == speaker.id |> Beef.Users.get() |> Beef.Users.room_role()
     end
 
     test "mod can make the person a speaker", t do
@@ -183,11 +194,11 @@ defmodule BrothTest.Room.SetRoleTest do
           %{"userId" => speaker_id, "role" => "speaker"}
         )
 
-      WsClient.assert_empty_reply("room:set_role:reply", ref)
+      WsClient.assert_empty_reply(ref)
 
       WsClient.assert_frame("user:update", _, speaker_ws)
 
-      assert :speaker = speaker_id |> Users.get |> Users.room_role
+      assert :speaker = speaker_id |> Users.get() |> Users.room_role()
 
       # both clients get notified
       WsClient.assert_frame(

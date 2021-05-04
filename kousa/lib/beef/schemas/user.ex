@@ -62,7 +62,11 @@ defmodule Beef.Schemas.User do
     field(:apiKey, :binary_id)
 
     # associations
-    has_one(:roomPermissions, Beef.Schemas.RoomPermission, foreign_key: :userId, on_replace: :update)
+    has_one(:roomPermissions, Beef.Schemas.RoomPermission,
+      foreign_key: :userId,
+      on_replace: :update
+    )
+
     belongs_to(:botOwner, Beef.Schemas.User, foreign_key: :botOwnerId, type: :binary_id)
     belongs_to(:currentRoom, Room, foreign_key: :currentRoomId, type: :binary_id)
 

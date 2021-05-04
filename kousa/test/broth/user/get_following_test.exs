@@ -20,7 +20,7 @@ defmodule BrothTest.User.GetFollowingTest do
     test "returns an empty list if you aren't following anyone", t do
       ref = WsClient.send_call(t.user_ws, "user:get_following", %{"cursor" => 0})
 
-      WsClient.assert_reply("user:get_following:reply", ref, %{"following" => []})
+      WsClient.assert_reply(ref, %{"following" => []})
     end
 
     test "returns that person if you are following someone", t do
@@ -29,7 +29,7 @@ defmodule BrothTest.User.GetFollowingTest do
 
       ref = WsClient.send_call(t.user_ws, "user:get_following", %{"cursor" => 0})
 
-      WsClient.assert_reply("user:get_following:reply", ref, %{
+      WsClient.assert_reply(ref, %{
         "following" => [
           %{
             "id" => ^followed_id
@@ -50,7 +50,7 @@ defmodule BrothTest.User.GetFollowingTest do
 
       user_id = t.user.id
 
-      WsClient.assert_reply("user:get_following:reply", ref, %{
+      WsClient.assert_reply(ref, %{
         "following" => [
           %{
             "id" => ^user_id

@@ -53,7 +53,7 @@ defmodule Beef.Mutations.Users do
   def set_perms(user = %User{}, value) do
     user
     |> User.change_perms(@changes[value])
-    |> Repo.update
+    |> Repo.update()
   end
 
   def set_perms(user_id, value) when is_uuid(user_id) do

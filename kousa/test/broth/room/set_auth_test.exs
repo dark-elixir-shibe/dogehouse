@@ -51,7 +51,7 @@ defmodule BrothTest.Room.SetAuthTest do
           }
         )
 
-      WsClient.assert_empty_reply("room:set_auth:reply", ref)
+      WsClient.assert_empty_reply(ref)
 
       # both clients get notified
       WsClient.assert_frame(
@@ -93,7 +93,7 @@ defmodule BrothTest.Room.SetAuthTest do
           "level" => "owner"
         })
 
-      WsClient.assert_empty_reply("room:set_auth:reply", ref)
+      WsClient.assert_empty_reply(ref)
 
       # NB: we get an extraneous speaker_added message here.
       WsClient.assert_frame(

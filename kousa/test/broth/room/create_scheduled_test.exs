@@ -27,11 +27,7 @@ defmodule BrothTest.Room.CreateScheduledTest do
           %{"name" => "foo room", "scheduledFor" => DateTime.to_iso8601(time)}
         )
 
-      WsClient.assert_reply(
-        "room:create_scheduled:reply",
-        ref,
-        %{"id" => room_id, "name" => "foo room"}
-      )
+      WsClient.assert_reply(ref, %{"id" => room_id, "name" => "foo room"})
 
       assert %{name: "foo room"} = Beef.ScheduledRooms.get_by_id(room_id)
     end

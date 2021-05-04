@@ -32,14 +32,14 @@ defmodule BrothTest.Room.DeafenTest do
 
       # deaf ON
       ref = WsClient.send_call(t.user_ws, "room:deafen", %{"deafened" => true})
-      WsClient.assert_reply("room:deafen:reply", ref, _)
+      WsClient.assert_empty_reply(ref)
       Process.sleep(100)
       map = Onion.RoomSession.get(room_id, :deafMap)
       assert is_map_key(map, t.user.id)
 
       # deaf OFF
       ref = WsClient.send_call(t.user_ws, "room:deafen", %{"deafened" => false})
-      WsClient.assert_reply("room:deafen:reply", ref, _)
+      WsClient.assert_empty_reply(ref)
       Process.sleep(100)
       map = Onion.RoomSession.get(room_id, :deafMap)
       refute is_map_key(map, t.user.id)
@@ -52,7 +52,7 @@ defmodule BrothTest.Room.DeafenTest do
 
       ref = WsClient.send_call(t.user_ws, "room:deafen", %{"deafened" => false})
 
-      WsClient.assert_reply("room:deafen:reply", ref, _)
+      WsClient.assert_empty_reply(ref)
 
       map = Onion.RoomSession.get(room_id, :deafMap)
 

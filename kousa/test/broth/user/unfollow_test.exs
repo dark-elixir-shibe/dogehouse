@@ -32,7 +32,7 @@ defmodule BrothTest.User.UnfollowTest do
           "userId" => followed.id
         })
 
-      WsClient.assert_reply("user:unfollow:reply", ref, %{})
+      WsClient.assert_empty_reply(ref)
 
       refute Beef.Follows.following_me?(followed.id, t.user.id)
     end

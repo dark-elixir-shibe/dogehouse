@@ -49,7 +49,6 @@ defmodule BrothTest.Room.GetScheduledTest do
         )
 
       WsClient.assert_reply(
-        "room:get_scheduled:reply",
         ref,
         %{
           "rooms" => [
@@ -83,13 +82,7 @@ defmodule BrothTest.Room.GetScheduledTest do
           %{"range" => "upcoming", "userId" => user_id}
         )
 
-      WsClient.assert_reply(
-        "room:get_scheduled:reply",
-        ref,
-        %{
-          "rooms" => []
-        }
-      )
+      WsClient.assert_reply(ref, %{"rooms" => []})
     end
 
     test "it won't return a far future room", t do
@@ -108,13 +101,7 @@ defmodule BrothTest.Room.GetScheduledTest do
           %{"range" => "upcoming", "userId" => user_id}
         )
 
-      WsClient.assert_reply(
-        "room:get_scheduled:reply",
-        ref,
-        %{
-          "rooms" => []
-        }
-      )
+      WsClient.assert_reply(ref, %{"rooms" => []})
     end
 
     test "it will return a far future room if range is set to all", t do
@@ -133,13 +120,7 @@ defmodule BrothTest.Room.GetScheduledTest do
           %{"userId" => user_id}
         )
 
-      WsClient.assert_reply(
-        "room:get_scheduled:reply",
-        ref,
-        %{
-          "rooms" => [%{"scheduledFor" => the_future}]
-        }
-      )
+      WsClient.assert_reply(ref, %{"rooms" => [%{"scheduledFor" => the_future}]})
 
       assert DateTime.to_iso8601(time) == the_future
     end
@@ -157,11 +138,7 @@ defmodule BrothTest.Room.GetScheduledTest do
           %{}
         )
 
-      WsClient.assert_reply(
-        "room:get_scheduled:reply",
-        ref,
-        %{"rooms" => []}
-      )
+      WsClient.assert_reply(ref, %{"rooms" => []})
     end
 
     test "it returns other rooms", t do
@@ -183,7 +160,6 @@ defmodule BrothTest.Room.GetScheduledTest do
         )
 
       WsClient.assert_reply(
-        "room:get_scheduled:reply",
         ref,
         %{
           "rooms" => [

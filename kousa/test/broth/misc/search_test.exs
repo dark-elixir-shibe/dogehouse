@@ -37,12 +37,7 @@ defmodule BrothTest.Misc.Search do
           %{query: "foo"}
         )
 
-      WsClient.assert_reply(
-        "misc:search:reply",
-        ref,
-        %{"items" => [%{"id" => ^room_id}]},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"items" => [%{"id" => ^room_id}]})
     end
 
     test "doesn't return a room if it's private", t do
@@ -83,12 +78,7 @@ defmodule BrothTest.Misc.Search do
 
       u_id = t.user.id
 
-      WsClient.assert_reply(
-        "misc:search:reply",
-        ref,
-        %{"items" => [%{"id" => ^u_id}]},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"items" => [%{"id" => ^u_id}]})
     end
   end
 end

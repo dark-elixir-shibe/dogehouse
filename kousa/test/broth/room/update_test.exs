@@ -40,11 +40,7 @@ defmodule BrothTest.Room.UpdateTest do
           %{"name" => "quux room", "isPrivate" => false}
         )
 
-      WsClient.assert_reply(
-        "room:update:reply",
-        ref,
-        %{"name" => "quux room", "isPrivate" => false}
-      )
+      WsClient.assert_reply(ref, %{"name" => "quux room", "isPrivate" => false})
 
       # make sure the room is actually private
       assert %{

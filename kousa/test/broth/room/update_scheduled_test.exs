@@ -34,11 +34,7 @@ defmodule BrothTest.Room.UpdateScheduledTest do
           %{"id" => room_id, "name" => "bar room"}
         )
 
-      WsClient.assert_reply(
-        "room:update_scheduled:reply",
-        ref,
-        %{"name" => "bar room"}
-      )
+      WsClient.assert_reply(ref, %{"name" => "bar room"})
 
       assert %{name: "bar room"} = Beef.ScheduledRooms.get_by_id(room_id)
     end
