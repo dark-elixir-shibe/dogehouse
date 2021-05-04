@@ -27,7 +27,7 @@ defmodule BrothTest.User.FollowTest do
           "userId" => followed.id
         })
 
-      WsClient.assert_empty_reply(ref, %{})
+      WsClient.assert_empty_reply(ref)
 
       assert Beef.Follows.following_me?(followed.id, t.user.id)
     end

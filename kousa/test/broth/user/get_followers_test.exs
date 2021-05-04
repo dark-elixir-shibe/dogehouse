@@ -20,7 +20,7 @@ defmodule BrothTest.User.GetFollowersTest do
     test "returns an empty list if no one is following you", t do
       ref = WsClient.send_call(t.user_ws, "user:get_followers", %{"cursor" => 0})
 
-      WsClient.assert_reply("user:get_followers:reply", ref, %{"followers" => []})
+      WsClient.assert_reply(ref, %{"followers" => []})
     end
 
     test "returns that person if someone is following you", t do

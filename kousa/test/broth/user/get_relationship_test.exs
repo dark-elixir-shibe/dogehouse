@@ -60,12 +60,7 @@ defmodule BrothTest.User.GetRelationshipTest do
           %{"userId" => followed_id}
         )
 
-      WsClient.assert_reply(
-        "user:get_relationship:reply",
-        ref,
-        %{"relationship" => "mutual"},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"relationship" => "mutual"})
 
       ref =
         WsClient.send_call(
@@ -74,12 +69,7 @@ defmodule BrothTest.User.GetRelationshipTest do
           %{"userId" => user_id}
         )
 
-      WsClient.assert_reply(
-        "user:get_relationship:reply",
-        ref,
-        %{"relationship" => "mutual"},
-        followed_ws
-      )
+      WsClient.assert_reply(ref, %{"relationship" => "mutual"})
     end
 
     test "retrieves asymmetric following info", t do
@@ -97,12 +87,7 @@ defmodule BrothTest.User.GetRelationshipTest do
           %{"userId" => followed_id}
         )
 
-      WsClient.assert_reply(
-        "user:get_relationship:reply",
-        ref,
-        %{"relationship" => "following"},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"relationship" => "following"})
 
       ref =
         WsClient.send_call(
@@ -111,12 +96,7 @@ defmodule BrothTest.User.GetRelationshipTest do
           %{"userId" => user_id}
         )
 
-      WsClient.assert_reply(
-        "user:get_relationship:reply",
-        ref,
-        %{"relationship" => "follower"},
-        followed_ws
-      )
+      WsClient.assert_reply(ref, %{"relationship" => "follower"})
     end
   end
 end

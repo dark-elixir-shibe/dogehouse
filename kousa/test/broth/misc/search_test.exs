@@ -60,12 +60,7 @@ defmodule BrothTest.Misc.Search do
           %{query: "foo"}
         )
 
-      WsClient.assert_reply(
-        "misc:search:reply",
-        ref,
-        %{"items" => []},
-        t.user_ws
-      )
+      WsClient.assert_reply(ref, %{"items" => []})
     end
 
     test "returns user if query matches", t do

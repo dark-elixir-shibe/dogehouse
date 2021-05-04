@@ -19,7 +19,7 @@ defmodule BrothTest.Room.GetInviteListTest do
   describe "the websocket room:get_invite_list operation" do
     test "gets an empty list when you haven't invited anyone", t do
       ref = WsClient.send_call(t.user_ws, "room:get_invite_list", %{"cursor" => 0})
-      WsClient.assert_reply("room:get_invite_list:reply", ref, %{"invites" => []}, t.user_ws)
+      WsClient.assert_reply(ref, %{"invites" => []}, t.user_ws)
     end
 
     test "returns one user when you have invited them", t do

@@ -88,7 +88,7 @@ defmodule BrothTest.Room.SetRoleTest do
           %{"userId" => speaker_id, "role" => "speaker"}
         )
 
-      WsClient.assert_empty_reply("room:set_role:reply", ref)
+      WsClient.assert_empty_reply(ref)
 
       # both clients get notified
       WsClient.assert_frame(
@@ -118,7 +118,7 @@ defmodule BrothTest.Room.SetRoleTest do
       assert :listener == speaker_id |> Users.get() |> Users.room_role()
 
       ref = WsClient.send_call(speaker_ws, "room:set_role", %{"role" => "raised_hand"})
-      WsClient.assert_empty_reply("room:set_role:reply", ref)
+      WsClient.assert_empty_reply(ref)
 
       WsClient.assert_frame("user:update", _)
       assert :raised_hand == speaker_id |> Users.get() |> Users.room_role()

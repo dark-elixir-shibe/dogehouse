@@ -145,7 +145,7 @@ defmodule BrothTest.WsClient do
     end
   end
 
-  defmacro assert_empty_reply(op, ref) do
+  defmacro assert_empty_reply(ref) do
     quote do
       {op, ref, from} = unquote(ref)
       reply_op = op <> ":reply"

@@ -34,11 +34,7 @@ defmodule BrothTest.Room.DeleteScheduledTest do
           %{"roomId" => room_id}
         )
 
-      WsClient.assert_reply(
-        "room:delete_scheduled:reply",
-        ref,
-        %{}
-      )
+      WsClient.assert_empty_reply(ref)
 
       refute Beef.ScheduledRooms.get_by_id(room_id)
     end
