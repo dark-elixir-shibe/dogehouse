@@ -62,7 +62,7 @@ defmodule BrothTest.WsClient do
 
     receive do
       {:text, %{"op" => ^reply_op, "ref" => ^ref, "p" => payload}, ^ws} ->
-        payload
+        {payload, ref, op}
     after
       100 ->
         raise "reply to `#{op}` not received. #{drain()}"
@@ -132,42 +132,25 @@ defmodule BrothTest.WsClient do
 
   @doc """
   asserts that a reply from a previously issued call operation has been
-  receieved, as identified by its reference uuid (`ref`).
-
-  Note that the third parameter is matchable, so you can use `_`, use
-  it to assign a to a variable, or, do partial matches on maps.
+  receieved, as identified by its operator/uuid/pid triple (`ref`).
   """
-  defmacro assert_reply(op, ref, payload, from \\ nil) do
-    if from do
-      quote do
-        op = unquote(op)
-        from = unquote(from)
-        ref = unquote(ref)
+  defmacro assert_reply(ref, payload) do
+    quote do
+      {op, ref, from} = unquote(ref)
+      reply_op = op <> ":reply"
 
-        ExUnit.Assertions.assert_receive(
-          {:text, %{"op" => ^op, "p" => unquote(payload), "ref" => ^ref}, ^from}
-        )
-      end
-    else
-      quote do
-        op = unquote(op)
-        ref = unquote(ref)
-
-        ExUnit.Assertions.assert_receive(
-          {:text, %{"op" => ^op, "p" => unquote(payload), "ref" => ^ref}, _}
-        )
-      end
+      ExUnit.Assertions.assert_receive(
+        {:text, %{"op" => ^reply_op, "p" => unquote(payload), "ref" => ^ref}, ^from}
+      )
     end
   end
 
-  defmacro assert_empty_reply(op, ref, from! \\ nil) do
-    from! = if from!, do: {:^, [], from!}, else: {:_, [], Elixir}
-
+  defmacro assert_empty_reply(op, ref) do
     quote do
+      {op, ref, from} = unquote(ref)
+      reply_op = op <> ":reply"
       ExUnit.Assertions.assert_receive(
-        {:text,
-          msg = %{"op" => unquote(op), "ref" => ^unquote(ref)},
-          unquote(from!)})
+        {:text, msg = %{"op" => ^reply_op, "ref" => ^ref}, ^from})
       ExUnit.Assertions.assert(msg["p"] == %{})
       ExUnit.Assertions.refute(msg["e"])
     end
