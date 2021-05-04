@@ -34,14 +34,14 @@ defmodule Beef.Schemas.RoomPermission do
   @fields ~w(userId roomId isSpeaker isMod askedToSpeak)a
 
   @doc false
-  def insert_changeset(roomPerm, attrs) do
-    roomPerm
+  def insert_changeset(permissions, attrs) do
+    permissions
     |> cast(attrs, @fields)
     |> validate_required(@fields)
   end
 
-  def update_changeset(roomPerm, attrs) do
-    roomPerm
+  def update_changeset(permissions, attrs) do
+    permissions
     |> cast(attrs, [:isSpeaker, :isMod, :askedToSpeak])
     |> validate_required(@fields)
   end

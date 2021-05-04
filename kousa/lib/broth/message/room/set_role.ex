@@ -22,7 +22,6 @@ defmodule Broth.Message.Room.SetRole do
     |> cast(data, [:userId, :role])
     # if we don't have an id, assume self.
     |> validate_required([:userId, :role])
-    |> UUID.normalize(:id)
   end
 
   def execute(changeset, state = %{user: owner}) do
