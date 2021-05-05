@@ -162,6 +162,7 @@ defmodule BrothTest.Room.SetRoleTest do
         )
 
       WsClient.assert_empty_reply(ref)
+
       assert :speaker == speaker.id |> Beef.Users.get() |> Beef.Users.room_role()
     end
 
