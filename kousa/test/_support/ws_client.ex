@@ -36,6 +36,8 @@ defmodule BrothTest.WsClient do
       user_ws,
       {:send, %{"op" => op, "p" => payload, "ref" => call_ref, "v" => "0.2.0"}}
     )
+
+    {op, call_ref, user_ws}
   end
 
   def send_call_legacy(user_ws, op, payload) do
