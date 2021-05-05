@@ -117,6 +117,7 @@ defmodule Broth.Message.Cast do
 
       {[schema_mod], false} ->
         Code.ensure_compiled(schema_mod)
+        Process.sleep(150)
 
         unless function_exported?(schema_mod, :__schema__, 2) do
           raise CompileError,

@@ -37,7 +37,7 @@ defmodule BrothTest.WsClient do
       {:send, %{"op" => op, "p" => payload, "ref" => call_ref, "v" => "0.2.0"}}
     )
 
-    call_ref
+    {payload, call_ref, op}
   end
 
   def send_call_legacy(user_ws, op, payload) do
@@ -57,12 +57,12 @@ defmodule BrothTest.WsClient do
   part of the setup.
   """
   def do_call(ws, op, payload) do
-    ref = send_call(ws, op, payload)
+    {_, ref, _} = send_call(ws, op, payload)
     reply_op = op <> ":reply"
 
     receive do
       {:text, %{"op" => ^reply_op, "ref" => ^ref, "p" => payload}, ^ws} ->
-        {payload, ref, op}
+        payload
     after
       100 ->
         raise "reply to `#{op}` not received. #{drain()}"
