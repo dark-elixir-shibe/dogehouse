@@ -247,11 +247,17 @@ defmodule Broth.SocketHandler do
   end
 
   defp wrap_error(message, error) do
+    operator = if message.reference do
+      message.inbound_operator <> ":reply"
+    else
+      message.inbound_operator
+    end
+
     Map.merge(
       message,
       %{
         payload: nil,
-        operator: message.inbound_operator,
+        operator: operator,
         errors: to_map(error)
       }
     )
