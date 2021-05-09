@@ -37,7 +37,6 @@ defmodule Beef.Users do
   defdelegate get_current_room(user_id), to: Beef.Access.Users
   defdelegate get_current_room_id(user_id), to: Beef.Access.Users
   defdelegate get_ip(user_id), to: Beef.Access.Users
-  defdelegate bot?(user_id), to: Beef.Access.Users
   defdelegate get_by_api_key(api_key), to: Beef.Access.Users
   defdelegate count_bot_accounts(user_id), to: Beef.Access.Users
   # CHOPPING BLOCK
@@ -47,10 +46,12 @@ defmodule Beef.Users do
   defdelegate update(changeset), to: Beef.Repo
   defdelegate set_role(user, role), to: Beef.Mutations.Users
   defdelegate set_auth(user, level), to: Beef.Mutations.Users
+  defdelegate create_bot(user_id, username), to: Beef.Mutations.Users
 
   # LENSES
   defdelegate room_role(user), to: Beef.Lenses.Users
   defdelegate room_auth(user), to: Beef.Lenses.Users
+  defdelegate bot?(user_id), to: Beef.Lenses.Users
 
   defdelegate join_room(user, room_id, opts), to: Beef.Mutations.Users
 
@@ -64,7 +65,6 @@ defmodule Beef.Users do
   defdelegate set_offline(user_id), to: Beef.Mutations.Users
 
   defdelegate set_current_room(user_id, room_id), to: Beef.Mutations.Users
-  defdelegate create_bot(user_id, username), to: Beef.Mutations.Users
 
   # TODO: make can_speak, returning, a single keyword list
   defdelegate set_current_room(user_id, room_id, can_speak), to: Beef.Mutations.Users

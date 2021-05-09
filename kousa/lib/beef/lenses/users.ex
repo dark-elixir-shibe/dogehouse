@@ -48,4 +48,7 @@ defmodule Beef.Lenses.Users do
   end
 
   def room_role(_), do: :listener
+
+  def bot?(user), do: not is_nil(user.botOwnerId)
+
 end

@@ -67,7 +67,9 @@ defmodule Beef.Schemas.User do
       on_replace: :update
     )
 
+    has_many(:bots, Beef.Schemas.User, foreign_key: :botOwnerId)
     belongs_to(:botOwner, Beef.Schemas.User, foreign_key: :botOwnerId, type: :binary_id)
+
     belongs_to(:currentRoom, Room, foreign_key: :currentRoomId, type: :binary_id)
 
     # THESE ARE ON THE CHOPPING BLOCK
@@ -93,7 +95,8 @@ defmodule Beef.Schemas.User do
     # TODO: amend this to accept *either* githubId or twitterId and also
     # pipe edit_changeset into this puppy.
     data
-    |> cast(attrs, ~w(username githubId avatarUrl bannerUrl)a)
+    |> cast(attrs, ~w(username githubId avatarUrl bannerUrl botOwnerId displayName apiKey bio)a)
+    # TODO: merge into a common create method
     |> changeset
   end
 
@@ -142,6 +145,12 @@ defmodule Beef.Schemas.User do
     youAreFollowing followsYou botOwnerId roomPermission)a
 
     @impl true
+    @spec encode(map, Jason.Encode.opts()) ::
+            binary
+            | maybe_improper_list(
+                binary | maybe_improper_list(any, binary | []) | byte,
+                binary | []
+              )
     def encode(user, opts) do
       user
       |> Map.take(@fields)

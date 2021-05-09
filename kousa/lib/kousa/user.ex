@@ -54,4 +54,18 @@ defmodule Kousa.User do
       _ -> {:error, "tried to ban #{user_id_to_ban} but that user didn't exist"}
     end
   end
+
+  def create_bot(user, botname) do
+    with false <- Users.bot?(user),
+         bots when length(bots) <= 100 <- user.bots,
+         {:ok, bot_user} <- Users.create_bot(user, botname) do
+
+      # TODO: broadcast new state
+      {:ok, bot_user.apiKey, %{user | bots: [bot_user | user.bots]}}
+    else
+      true -> {:error, "bots can't create bots"}
+      count when is_integer(count) -> {:error, "you've reached the max of 100 bot accounts"}
+      error -> error
+    end
+  end
 end

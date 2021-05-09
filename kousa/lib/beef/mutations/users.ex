@@ -163,6 +163,7 @@ defmodule Beef.Mutations.Users do
   end
 
   def twitter_find_or_create(user) do
+    # TODO: merge into a common create method.
     db_user =
       from(u in User,
         where: u.twitterId == ^user.twitterId,
@@ -207,6 +208,7 @@ defmodule Beef.Mutations.Users do
   end
 
   def github_find_or_create(user, github_access_token) do
+    # TODO: merge into a common create method.
     githubId = Integer.to_string(user["id"])
 
     db_user =
@@ -255,6 +257,7 @@ defmodule Beef.Mutations.Users do
   end
 
   def discord_find_or_create(user, discord_access_token) do
+    # TODO: merge into a common create method.
     discordId = user["id"]
 
     db_user =
@@ -296,17 +299,18 @@ defmodule Beef.Mutations.Users do
     end
   end
 
-  def create_bot(owner_id, username) do
+  def create_bot(owner, username) do
+    # TODO: merge into a common create method.  Push details to a common system
     %User{}
-    |> User.edit_changeset(%{
-      id: Ecto.UUID.generate(),
+    |> User.create_changeset(%{
+      id: UUID.uuid4(),
       username: username,
       # @todo pick better default
       avatarUrl: "https://pbs.twimg.com/profile_images/1384417471944290304/4epg3HTW_400x400.jpg",
       displayName: username,
-      botOwnerId: owner_id,
+      botOwnerId: owner.id,
       bio: "I am a bot",
-      apiKey: Ecto.UUID.generate()
+      apiKey: UUID.uuid4()
     })
     |> Repo.insert(returning: true)
   end

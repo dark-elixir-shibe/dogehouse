@@ -55,4 +55,6 @@ defmodule Kousa.Utils.UUID do
         add_error(changeset, field, "is invalid")
     end
   end
+
+  def valid?(uuid), do: match?({:ok, _}, Ecto.UUID.cast(uuid))
 end

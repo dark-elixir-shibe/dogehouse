@@ -12,8 +12,8 @@ defmodule Beef.Queries.Users do
     from(u in User)
   end
 
-  def preload(query, :roomPermissions) do
-    Ecto.Query.preload(query, :roomPermissions)
+  def preload(query, preloads) do
+    Ecto.Query.preload(query, ^preloads)
   end
 
   def filter_by(query, filters) do

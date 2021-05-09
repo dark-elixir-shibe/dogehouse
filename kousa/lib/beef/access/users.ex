@@ -10,7 +10,7 @@ defmodule Beef.Access.Users do
   def get(user_id) do
     Query.start()
     |> Query.filter_by(id: user_id)
-    |> Query.preload(:roomPermissions)
+    |> Query.preload([:roomPermissions, :bots])
     |> Repo.one()
   end
 
@@ -174,24 +174,7 @@ defmodule Beef.Access.Users do
     end
   end
 
-  def bot?(user_id) do
-    # DO NOT COPY/PASTE THIS FUNCTION
-    try do
-      not is_nil(Onion.UserSession.get(user_id, :bot_owner_id))
-    catch
-      _, _ ->
-        case get_by_id(user_id) do
-          nil -> nil
-          %{botOwnerId: botOwnerId} -> not is_nil(botOwnerId)
-        end
-    end
-  end
-
   def get_by_api_key(api_key) do
     Repo.get_by(User, apiKey: api_key)
-  end
-
-  def count_bot_accounts(user_id) do
-    Repo.one(from(u in User, select: fragment("count(*)"), where: u.botOwnerId == ^user_id))
   end
 end
