@@ -52,7 +52,7 @@ defmodule Kousa.Room do
 
     if user.currentRoomId && Follows.following_me?(user_id, user_id_to_invite) do
       # @todo store room name in RoomSession to avoid db lookups
-      room = Rooms.get_room_by_id(user.currentRoomId)
+      room = Rooms.get(user.currentRoomId)
 
       if not is_nil(room) do
         Onion.RoomSession.create_invite(
@@ -233,6 +233,7 @@ defmodule Kousa.Room do
 
   # if the user is in a room, leave it, then clear the room.
   def join(room_id, user, opts) do
+    # TODO here:
     leave(room_id, user)
     join(room_id, %{user | currentRoomId: nil}, opts)
   end
@@ -249,22 +250,24 @@ defmodule Kousa.Room do
 
   def leave(room, user), do: {:ok, room, user}
 
-  def leave_room(user_id, current_room_id \\ nil) do
-    current_room_id =
-      if is_nil(current_room_id),
+  # TODO: make USER_ID trampoline to USER struct.
+  def leave_room(user_id, room_id \\ nil) do
+    # TODO: CRASH IF NOT IN CURRENT ROOM.
+    room_id =
+      if is_nil(room_id),
         do: Beef.Users.get_current_room_id(user_id),
-        else: current_room_id
+        else: room_id
 
-    if current_room_id do
-      case Rooms.leave_room(user_id, current_room_id) do
+    if room_id do
+      case Rooms.leave_room(user_id, room_id) do
         # the room should be destroyed
-        {:bye, room} ->
-          Onion.RoomSession.destroy(current_room_id, user_id)
+        {:deleted, room} ->
+          Onion.RoomSession.destroy(room_id, user_id)
 
           Onion.VoiceRabbit.send(room.voiceServerId, %{
             op: "destroy-room",
             uid: user_id,
-            d: %{peerId: user_id, roomId: current_room_id}
+            d: %{peerId: user_id, roomId: room_id}
           })
 
         # the room stays alive with new room creator
@@ -272,21 +275,21 @@ defmodule Kousa.Room do
           case x do
             {:new_creator_id, creator_id} ->
               Onion.RoomSession.broadcast_ws(
-                current_room_id,
-                %{op: "new_room_creator", d: %{roomId: current_room_id, userId: creator_id}}
+                room_id,
+                %{op: "new_room_creator", d: %{roomId: room_id, userId: creator_id}}
               )
 
             _ ->
               nil
           end
 
-          Onion.RoomSession.leave_room(current_room_id, user_id)
+          Onion.RoomSession.leave_room(room_id, user_id)
       end
 
       # unsubscribe to the room chat
-      PubSub.unsubscribe("chat:" <> current_room_id)
+      PubSub.unsubscribe("chat:" <> room_id)
 
-      {:ok, %{roomId: current_room_id}}
+      {:ok, %{roomId: room_id}}
     else
       {:error, "you are not in a room"}
     end

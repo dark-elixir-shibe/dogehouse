@@ -44,8 +44,8 @@ defmodule Kousa.User do
   def ban(user_id_to_ban, reason_for_ban, opts) do
     authorized_github_id = Application.get_env(:kousa, :ben_github_id, "")
 
-    with %{githubId: ^authorized_github_id} <- Users.get_by_id(opts[:admin_id]),
-         user_to_ban = %{} <- Users.get_by_id(user_id_to_ban) do
+    with %{githubId: ^authorized_github_id} <- Users.get(opts[:admin_id]),
+         user_to_ban = %{} <- Users.get(user_id_to_ban) do
       Kousa.Room.leave_room(user_id_to_ban, user_to_ban.currentRoomId)
       Users.set_reason_for_ban(user_id_to_ban, reason_for_ban)
       Onion.UserSession.send_ws(user_id_to_ban, nil, %{op: "banned", d: %{}})

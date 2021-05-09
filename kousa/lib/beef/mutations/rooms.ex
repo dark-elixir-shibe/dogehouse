@@ -32,37 +32,31 @@ defmodule Beef.Mutations.Rooms do
 
   # trusts that the user is in the room
   def kick_from_room(user_id, room_id) do
-    room = Beef.Rooms.get_room_by_id(room_id)
+    room = Beef.Rooms.get(room_id)
     Beef.Users.set_user_left_current_room(user_id)
     new_people_list = Enum.filter(room.peoplePreviewList, fn x -> x.id != user_id end)
   end
 
-  # trusts that the user is in the room
   def leave_room(user_id, room_id) do
-    room = Beef.Rooms.get_room_by_id(room_id)
+    case Beef.Rooms.get(room_id) do
+      room = %{attendees: [%{id: ^user_id}]} ->
+        delete_room_by_id(room_id)
+        {:deleted, room}
+      room = %{creatorId: ^user_id} ->
+        # replace this as a lens:
+        new_creator_id = Beef.Rooms.get_next_creator_for_room(room_id)
 
-    if not is_nil(room) do
-      if room.numPeopleInside <= 1 do
-        delete_room_by_id(room.id)
-        {:bye, room}
-      else
+        # jesus christ.
         Beef.Users.set_user_left_current_room(user_id)
-        new_people_list = Enum.filter(room.peoplePreviewList, fn x -> x.id != user_id end)
 
-        if room.creatorId != user_id do
-          raise "fix this"
-        else
-          newCreator = Beef.Rooms.get_next_creator_for_room(room.id)
-
-          if newCreator do
-            raise "fix this"
-            {:new_creator_id, newCreator.id}
-          else
-            delete_room_by_id(room.id)
-            {:bye, room}
-          end
+        room
+        |> Room.change_owner(%{creatorId: new_creator_id})
+        |> Repo.update
+      room ->
+        if Enum.any?(room.attendees, &(&1.id == user_id)) do
+          Beef.Users.set_user_left_current_room(user_id)
         end
-      end
+        {:ok, %{room | attendees: Enum.reject(room.attendees, &(&1.id == user_id))}}
     end
   end
 

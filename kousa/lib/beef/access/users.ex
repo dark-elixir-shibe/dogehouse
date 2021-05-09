@@ -144,7 +144,7 @@ defmodule Beef.Access.Users do
 
     case room_id do
       nil -> nil
-      id -> Rooms.get_room_by_id(id)
+      id -> Rooms.get(id)
     end
   end
 

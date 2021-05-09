@@ -31,7 +31,7 @@ defmodule BrothTest.Room.UpdateTest do
       assert %{currentRoomId: ^room_id} = Users.get_by_id(t.user.id)
       # make sure the room is private
 
-      assert Rooms.get_room_by_id(room_id).isPrivate
+      assert Rooms.get(room_id).isPrivate
 
       ref =
         WsClient.send_call(
@@ -46,7 +46,7 @@ defmodule BrothTest.Room.UpdateTest do
       assert %{
                isPrivate: false,
                name: "quux room"
-             } = Rooms.get_room_by_id(room_id)
+             } = Rooms.get(room_id)
     end
   end
 end

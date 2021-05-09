@@ -59,7 +59,7 @@ defmodule BrothTest.EditRoomTest do
                isPrivate: true,
                description: "baz quux",
                name: "bar room"
-             } = Beef.Rooms.get_room_by_id(room_id)
+             } = Beef.Rooms.get(room_id)
     end
 
     @tag :skip

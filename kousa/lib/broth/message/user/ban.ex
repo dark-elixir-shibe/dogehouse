@@ -1,5 +1,8 @@
 defmodule Broth.Message.User.Ban do
-  use Broth.Message.Call
+  alias Broth.Message.Types.Empty
+
+  use Broth.Message.Call,
+    reply: Empty
 
   @primary_key false
   embedded_schema do
@@ -13,20 +16,10 @@ defmodule Broth.Message.User.Ban do
     |> validate_required([:userId, :reason])
   end
 
-  defmodule Reply do
-    use Broth.Message.Push
-
-    @derive {Jason.Encoder, only: []}
-
-    @primary_key false
-    embedded_schema do
-    end
-  end
-
   def execute(changeset, state) do
     with {:ok, request} <- apply_action(changeset, :validate),
          :ok <- Kousa.User.ban(request.userId, request.reason, admin_id: state.user.id) do
-      {:reply, %Reply{}, state}
+      {:reply, %Empty{}, state}
     end
   end
 end

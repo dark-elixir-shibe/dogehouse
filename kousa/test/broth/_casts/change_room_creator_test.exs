@@ -85,7 +85,7 @@ defmodule BrothTest.ChangeRoomCreatorTest do
         %{"userId" => ^speaker_id, "roomId" => ^room_id}
       )
 
-      assert Beef.Rooms.get_room_by_id(room_id).creatorId == speaker_id
+      assert Beef.Rooms.get(room_id).creatorId == speaker_id
       assert Process.alive?(t.user_ws)
     end
 

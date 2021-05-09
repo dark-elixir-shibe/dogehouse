@@ -15,7 +15,7 @@ defmodule Broth.Routes.Room do
 
     case UUID.cast(id) do
       {:ok, uuid} ->
-        room = Rooms.get_room_by_id(uuid)
+        room = Rooms.get(uuid)
 
         cond do
           is_nil(room) ->

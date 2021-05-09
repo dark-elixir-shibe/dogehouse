@@ -34,7 +34,7 @@ defmodule BrothTest.LeaveRoomTest do
       WsClient.assert_frame_legacy("you_left_room", _)
 
       refute Users.get_by_id(t.user.id).currentRoomId
-      refute Rooms.get_room_by_id(room_id)
+      refute Rooms.get(room_id)
     end
 
     test "removes the person from the room if they aren't the only person", t do
@@ -50,11 +50,11 @@ defmodule BrothTest.LeaveRoomTest do
       other = Factory.create(User)
       other_ws = WsClientFactory.create_client_for(other)
 
-      assert %{peoplePreviewList: [_]} = Rooms.get_room_by_id(room_id)
+      assert %{peoplePreviewList: [_]} = Rooms.get(room_id)
 
       WsClient.do_call(other_ws, "room:join", %{"roomId" => room_id})
 
-      assert %{peoplePreviewList: [_, _]} = Rooms.get_room_by_id(room_id)
+      assert %{peoplePreviewList: [_, _]} = Rooms.get(room_id)
 
       WsClient.send_msg_legacy(other_ws, "leave_room", %{})
 
@@ -64,7 +64,7 @@ defmodule BrothTest.LeaveRoomTest do
                peoplePreviewList: [
                  %{id: ^user_id}
                ]
-             } = Rooms.get_room_by_id(room_id)
+             } = Rooms.get(room_id)
     end
 
     @tag :skip

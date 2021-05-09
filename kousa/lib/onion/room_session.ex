@@ -368,37 +368,10 @@ defmodule Onion.RoomSession do
 
     ws_fan(attendees, %{
       op: "room_destroyed",
-      d: %{roomId: state.room_id}
+      d: %{roomId: state.room.id}
     })
 
     {:stop, :normal, state}
-  end
-
-  def kick_from_room(room_id, user_id), do: cast(room_id, {:kick_from_room, user_id})
-
-  defp kick_from_room_impl(user_id, state) do
-    attendees = Enum.filter(state.attendees, fn uid -> uid != user_id end)
-
-    Onion.Chat.remove_user(state.room_id, user_id)
-
-    Onion.VoiceRabbit.send(state.voice_server_id, %{
-      op: "close-peer",
-      uid: user_id,
-      d: %{peerId: user_id, roomId: state.room_id, kicked: true}
-    })
-
-    ws_fan(attendees, %{
-      op: "user_left_room",
-      d: %{userId: user_id, roomId: state.room_id, kicked: true}
-    })
-
-    {:noreply,
-     %{
-       state
-       | attendees: attendees,
-         muteMap: Map.delete(state.muteMap, user_id),
-         deafMap: Map.delete(state.deafMap, user_id)
-     }}
   end
 
   def leave_room(room_id, user_id), do: cast(room_id, {:leave_room, user_id})
@@ -406,17 +379,17 @@ defmodule Onion.RoomSession do
   defp leave_room_impl(user_id, state) do
     attendees = Enum.reject(state.attendees, &(&1 == user_id))
 
-    Onion.Chat.remove_user(state.room_id, user_id)
+    Onion.Chat.remove_user(state.room.id, user_id)
 
     Onion.VoiceRabbit.send(state.voice_server_id, %{
       op: "close-peer",
       uid: user_id,
-      d: %{peerId: user_id, roomId: state.room_id}
+      d: %{peerId: user_id, roomId: state.room.id}
     })
 
     ws_fan(attendees, %{
       op: "user_left_room",
-      d: %{userId: user_id, roomId: state.room_id}
+      d: %{userId: user_id, roomId: state.room.id}
     })
 
     new_state = %{
@@ -469,10 +442,6 @@ defmodule Onion.RoomSession do
     def handle_call(:dump, reply, state) do
       dump_impl(reply, state)
     end
-  end
-
-  def handle_cast({:kick_from_room, user_id}, state) do
-    kick_from_room_impl(user_id, state)
   end
 
   def handle_cast({:speaking_change, user_id, value}, state) do

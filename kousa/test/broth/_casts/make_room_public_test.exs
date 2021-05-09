@@ -31,7 +31,7 @@ defmodule BrothTest.MakeRoomPublicTest do
       assert %{currentRoomId: ^room_id} = Users.get_by_id(t.user.id)
       # make sure the room is private
 
-      assert Rooms.get_room_by_id(room_id).isPrivate
+      assert Rooms.get(room_id).isPrivate
 
       WsClient.send_msg_legacy(t.user_ws, "make_room_public", %{"newName" => "quux room"})
 
@@ -44,7 +44,7 @@ defmodule BrothTest.MakeRoomPublicTest do
       assert %{
                isPrivate: false,
                name: "quux room"
-             } = Rooms.get_room_by_id(room_id)
+             } = Rooms.get(room_id)
     end
   end
 end

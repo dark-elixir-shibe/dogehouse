@@ -174,7 +174,7 @@ defmodule Onion.UserSession do
     if state.pid || state.current_room_id do
       case Onion.RoomSession.get(state.current_room_id, :voice_server_id) do
         ^voice_server_id ->
-          room = Rooms.get_room_by_id(state.current_room_id)
+          room = Rooms.get(state.current_room_id)
           Kousa.Room.join_vc_room(state.user_id, room)
 
         _ ->

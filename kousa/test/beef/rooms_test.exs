@@ -86,11 +86,11 @@ defmodule Kousa.Beef.RoomsTest do
     test "get_top_public_rooms" do
     end
 
-    test "get_room_by_id" do
+    test "get" do
       room = Factory.create(Room)
       room2 = Factory.create(Room)
-      assert Beef.Rooms.get_room_by_id(room.id) == room
-      assert Beef.Rooms.get_room_by_id(room2.id) == room2
+      assert Beef.Rooms.get(room.id) == room
+      assert Beef.Rooms.get(room2.id) == room2
     end
 
     # still need to get to
@@ -301,7 +301,7 @@ defmodule Kousa.Beef.RoomsTest do
                name: "updated name",
                isPrivate: true,
                description: "updated description"
-             } = Beef.Rooms.get_room_by_id(id)
+             } = Beef.Rooms.get(id)
     end
   end
 end

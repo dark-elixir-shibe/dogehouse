@@ -59,7 +59,7 @@ defmodule Kousa.Auth do
       cond do
         user.currentRoomId ->
           # TODO: move to room business logic
-          room = Rooms.get_room_by_id(user.currentRoomId)
+          room = Rooms.get(user.currentRoomId)
 
           RoomSession.start_supervised(
             room_id: user.currentRoomId,
