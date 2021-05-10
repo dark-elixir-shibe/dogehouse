@@ -18,7 +18,7 @@ defmodule Broth.Translator.V0_1_0 do
     "deafen" => "room:deafen",
     "delete_room_chat_message" => "chat:delete",
     "auth" => "auth:request",
-    "leave_room" => "room:leave",
+    "leave" => "room:leave",
     "create_room" => "room:create",
     "edit_profile" => "user:update",
     "ban" => "user:ban",
@@ -197,7 +197,7 @@ defmodule Broth.Translator.V0_1_0 do
 
   # these casts need to be instrumented with fetchId in order to be treated
   # as a cast.
-  @casts_to_calls ~w(auth leave_room ban make_room_public mute deafen)
+  @casts_to_calls ~w(auth leave ban make_room_public mute deafen)
 
   def add_in_ref(message, op) when op in @casts_to_calls do
     Map.put(message, "fetchId", UUID.uuid4())

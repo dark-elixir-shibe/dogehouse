@@ -3,10 +3,9 @@ defmodule Kousa.Room do
   alias Beef.Users
   alias Beef.Follows
   alias Beef.Rooms
-  # note the following 2 module aliases are on the chopping block!
-  alias Beef.RoomPermissions
-  alias Beef.RoomBlocks
+
   alias Onion.PubSub
+  alias Onion.RoomSession
 
   alias Beef.Schemas.Room
   alias Beef.Schemas.User
@@ -71,28 +70,38 @@ defmodule Kousa.Room do
     end
   end
 
-  defp internal_kick_from_room(user_id_to_kick, room_id) do
-    current_room_id = Beef.Users.get_current_room_id(user_id_to_kick)
+  @authorized [:owner, :mod]
 
-    if current_room_id == room_id do
-      Rooms.kick_from_room(user_id_to_kick, current_room_id)
-      Onion.RoomSession.kick_from_room(current_room_id, user_id_to_kick)
+  def ban(user_id, opts) do
+    agent = %{currentRoomId: room_id} = opts[:by]
+    case Users.room_auth(agent) do
+      auth when auth in @authorized ->
+        Rooms.ban(room_id, user_id, Keyword.put(opts, :modId, agent.id))
+        RoomSession.leave(room_id, user_id)
+        :ok
+      _ ->
+        {:error, "permission denied"}
     end
   end
 
-  def block_from_room(user_id, user_id_to_block_from_room, should_ban_ip \\ false) do
-    with {status, room} when status in [:creator, :mod] <-
-           Rooms.get_room_status(user_id) do
-      if room.creatorId != user_id_to_block_from_room do
-        RoomBlocks.upsert(%{
-          modId: user_id,
-          userId: user_id_to_block_from_room,
-          roomId: room.id,
-          ip: if(should_ban_ip, do: Users.get_ip(user_id_to_block_from_room), else: nil)
-        })
+  def unban(user_id, opts) do
+    agent = %{currentRoomId: room_id} = opts[:by]
+    case Users.room_auth(agent) do
+      auth when auth in @authorized ->
+        Rooms.unban(room_id, user_id)
+        RoomSession.unban(room_id, user_id)
+      _ ->
+        {:error, "permission denied"}
+    end
+  end
 
-        internal_kick_from_room(user_id_to_block_from_room, room.id)
-      end
+  def get_banned_users(room_id, opts) do
+    agent = Keyword.get(opts, :by)
+    with %{currentRoomId: ^room_id} <- agent,
+         :owner <- Beef.Users.room_role(agent) do
+      Rooms.get_banned_users(room_id, opts)
+    else
+      _ -> {:error, "permission denied"}
     end
   end
 
@@ -227,7 +236,7 @@ defmodule Kousa.Room do
   def leave(room, user), do: {:ok, room, user}
 
   # TODO: make USER_ID trampoline to USER struct.
-  def leave_room(user_id, room_id \\ nil) do
+  def leave(user_id, room_id \\ nil) do
     # TODO: CRASH IF NOT IN CURRENT ROOM.
     room_id =
       if is_nil(room_id),
@@ -235,7 +244,7 @@ defmodule Kousa.Room do
         else: room_id
 
     if room_id do
-      case Rooms.leave_room(user_id, room_id) do
+      case Rooms.leave(user_id, room_id) do
         # the room should be destroyed
         {:deleted, room} ->
           Onion.RoomSession.destroy(room_id, user_id)
@@ -259,7 +268,7 @@ defmodule Kousa.Room do
               nil
           end
 
-          Onion.RoomSession.leave_room(room_id, user_id)
+          Onion.RoomSession.leave(room_id, user_id)
       end
 
       # unsubscribe to the room chat

@@ -37,7 +37,7 @@ defmodule Beef.Mutations.Rooms do
     new_people_list = Enum.filter(room.peoplePreviewList, fn x -> x.id != user_id end)
   end
 
-  def leave_room(user_id, room_id) do
+  def leave(user_id, room_id) do
     case Beef.Rooms.get(room_id) do
       room = %{attendees: [%{id: ^user_id}]} ->
         delete_room_by_id(room_id)

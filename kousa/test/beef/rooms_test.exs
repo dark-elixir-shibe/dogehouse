@@ -204,7 +204,7 @@ defmodule Kousa.Beef.RoomsTest do
     end
 
     @tag :skip
-    test "leave_room" do
+    test "leave" do
     end
 
     test "raw_insert" do

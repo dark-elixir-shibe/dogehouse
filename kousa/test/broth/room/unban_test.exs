@@ -18,7 +18,7 @@ defmodule BrothTest.Room.UnbanTest do
   end
 
   describe "the websocket room:unban operation" do
-    test "blocks that person from a room", t do
+    test "unbans that person from a room", t do
       # first, create a room owned by the test user.
       %{"id" => room_id} =
         WsClient.do_call(
@@ -32,7 +32,7 @@ defmodule BrothTest.Room.UnbanTest do
 
       # create a blocked user that is logged in.
       %{id: blocked_id} = Factory.create(User)
-
+      
       Beef.RoomBlocks.insert(%{
         userId: blocked_id,
         roomId: room_id,

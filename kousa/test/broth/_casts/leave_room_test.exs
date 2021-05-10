@@ -18,7 +18,7 @@ defmodule BrothTest.LeaveRoomTest do
     {:ok, user: user, user_ws: user_ws}
   end
 
-  describe "the websocket leave_room operation" do
+  describe "the websocket leave operation" do
     test "deletes the room if they are the only person", t do
       %{"id" => room_id} =
         WsClient.do_call(
@@ -29,7 +29,7 @@ defmodule BrothTest.LeaveRoomTest do
 
       assert Users.get_by_id(t.user.id).currentRoomId == room_id
 
-      WsClient.send_msg_legacy(t.user_ws, "leave_room", %{})
+      WsClient.send_msg_legacy(t.user_ws, "leave", %{})
 
       WsClient.assert_frame_legacy("you_left_room", _)
 
@@ -56,7 +56,7 @@ defmodule BrothTest.LeaveRoomTest do
 
       assert %{peoplePreviewList: [_, _]} = Rooms.get(room_id)
 
-      WsClient.send_msg_legacy(other_ws, "leave_room", %{})
+      WsClient.send_msg_legacy(other_ws, "leave", %{})
 
       WsClient.assert_frame_legacy("you_left_room", _, other_ws)
 

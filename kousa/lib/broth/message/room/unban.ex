@@ -30,7 +30,7 @@ defmodule Broth.Message.Room.Unban do
 
   def execute(changeset, state) do
     with {:ok, %{userId: user_id}} <- apply_action(changeset, :validate) do
-      Kousa.RoomBlock.unban(state.user.id, user_id)
+      Kousa.Room.unban(user_id, by: state.user)
       {:reply, %Empty{}, state}
     end
   end

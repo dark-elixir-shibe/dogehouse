@@ -393,27 +393,25 @@ defmodule Onion.RoomSession do
     {:stop, :normal, state}
   end
 
-  def leave_room(room_id, user_id), do: cast(room_id, {:leave_room, user_id})
+  def leave(room_id, user_id), do: cast(room_id, {:leave, user_id})
 
-  defp leave_room_impl(user_id, state) do
-    attendees = Enum.reject(state.attendees, &(&1 == user_id))
-
-    Onion.Chat.remove_user(state.room.id, user_id)
+  defp leave_impl(user_id, state = %{room: %{id: room_id}}) do
+    Onion.Chat.remove_user(room_id, user_id)
 
     Onion.VoiceRabbit.send(state.voice_server_id, %{
       op: "close-peer",
       uid: user_id,
-      d: %{peerId: user_id, roomId: state.room.id}
+      d: %{peerId: user_id, roomId: room_id}
     })
 
-    ws_fan(attendees, %{
-      op: "user_left_room",
-      d: %{userId: user_id, roomId: state.room.id}
+    PubSub.broadcast("room:" <> room_id, %Broth.Message.Room.Left{
+      userId: user_id,
+      roomId: room_id
     })
 
     new_state = %{
       state
-      | attendees: attendees,
+      | attendees: Enum.reject(state.attendees, &(&1.id == user_id)),
         muteMap: MapSet.delete(state.muteMap, user_id),
         deafMap: MapSet.delete(state.deafMap, user_id)
     }
@@ -501,7 +499,7 @@ defmodule Onion.RoomSession do
     destroy_impl(user_id, state)
   end
 
-  def handle_cast({:leave_room, user_id}, state) do
-    leave_room_impl(user_id, state)
+  def handle_cast({:leave, user_id}, state) do
+    leave_impl(user_id, state)
   end
 end

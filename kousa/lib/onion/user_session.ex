@@ -193,7 +193,7 @@ defmodule Onion.UserSession do
     Beef.Users.set_offline(state.user_id)
 
     if state.current_room_id do
-      Kousa.Room.leave_room(state.user_id, state.current_room_id)
+      Kousa.Room.leave(state.user_id, state.current_room_id)
     end
 
     {:stop, :normal, state}

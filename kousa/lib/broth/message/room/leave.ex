@@ -10,7 +10,7 @@ defmodule Broth.Message.Room.Leave do
   end
 
   def execute(_, state) do
-    case Kousa.Room.leave_room(state.user.id) do
+    case Kousa.Room.leave(state.user.id) do
       {:ok, _} ->
         {:reply, %Empty{}, state}
 

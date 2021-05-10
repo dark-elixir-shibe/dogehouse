@@ -17,7 +17,7 @@ defmodule Beef.Schemas.RoomBlock do
   end
 
   @doc false
-  def insert_changeset(roomBlock, attrs) do
+  def changeset(roomBlock, attrs) do
     roomBlock
     |> cast(attrs, [:userId, :roomId, :modId, :ip])
     |> validate_required([:userId, :roomId, :modId])
