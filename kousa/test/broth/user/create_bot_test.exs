@@ -31,7 +31,7 @@ defmodule BrothTest.User.CreateBotTest do
       WsClient.assert_reply(ref, %{"apiKey" => api_key})
 
       assert Kousa.Utils.UUID.valid?(api_key)
-      assert %{bots: [%{apiKey: ^api_key}]} =  Users.get(t.user.id)
+      assert %{bots: [%{apiKey: ^api_key}]} = Users.get(t.user.id)
     end
 
     test "returns error for username that's already taken", t do
@@ -58,7 +58,7 @@ defmodule BrothTest.User.CreateBotTest do
         )
 
       WsClient.assert_reply(ref, %{"apiKey" => api_key})
-       %{bots: [bot]} =  Users.get(t.user.id)
+      %{bots: [bot]} = Users.get(t.user.id)
       bot_ws = WsClientFactory.create_client_for(bot)
 
       ref =

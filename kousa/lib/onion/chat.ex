@@ -8,12 +8,12 @@ defmodule Onion.Chat do
 
   require Logger
 
-  defstruct room_id: "", users: [], ban_map: %{}, last_message_map: %{}
+  defstruct room_id: "", users: [], banned: MapSet.new(), last_message_map: %{}
 
   @type state :: %__MODULE__{
           room_id: String.t(),
           users: [String.t()],
-          ban_map: map(),
+          banned: MapSet.t,
           last_message_map: %{optional(UUID.t()) => DateTime.t()}
         }
 
@@ -25,7 +25,7 @@ defmodule Onion.Chat do
   defp cast(user_id, params), do: GenServer.cast(via(user_id), params)
   defp call(user_id, params), do: GenServer.call(via(user_id), params)
 
-  def start_link_supervised(room_id) do
+  def start_supervised(room_id) do
     callers = [self() | Process.get(:"$callers", [])]
 
     case DynamicSupervisor.start_child(
@@ -72,12 +72,6 @@ defmodule Onion.Chat do
     end)
   end
 
-  def ws_fan(users, msg) do
-    Enum.each(users, fn uid ->
-      Onion.UserSession.send_ws(uid, nil, msg)
-    end)
-  end
-
   ######################################################################
   ## API
 
@@ -87,9 +81,7 @@ defmodule Onion.Chat do
     {:reply, user_banned?(who, state), state}
   end
 
-  defp user_banned?(who, state) do
-    who in Map.keys(state.ban_map)
-  end
+  defp user_banned?(who, state), do: who in state.banned
 
   def unban_user(room_id, user_id), do: cast(room_id, {:unban_user, user_id})
 
@@ -112,25 +104,19 @@ defmodule Onion.Chat do
   def ban_user(room_id, user_id), do: cast(room_id, {:ban_user, user_id})
 
   defp ban_user_impl(user_id, state) do
-    ws_fan(state.users, %{
-      op: "chat_user_banned",
-      d: %{
-        userId: user_id
-      }
+    PubSub.broadcast("chat:" <> state.room_id, %Broth.Message.Chat.Banned{
+      userId: user_id
     })
 
-    {:noreply, %{state | ban_map: Map.put(state.ban_map, user_id, 1)}}
+    {:noreply, %{state | banned: MapSet.put(state.banned, user_id)}}
   end
 
   defp unban_user_impl(user_id, state) do
-    ws_fan(state.users, %{
-      op: "chat_user_unbanned",
-      d: %{
-        userId: user_id
-      }
+    PubSub.broadcast("chat:" <> state.room_id, %Broth.Message.Chat.Unbanned{
+      userId: user_id
     })
 
-    {:noreply, %{state | ban_map: Map.delete(state.ban_map, user_id)}}
+    {:noreply, %{state | banned: MapSet.delete(state.banned, user_id)}}
   end
 
   #####################################################################
@@ -142,12 +128,12 @@ defmodule Onion.Chat do
   end
 
   @spec send_msg_impl(Send.t(), state) :: {:noreply, state}
-  defp send_msg_impl(payload = %{from: from}, state) do
+  defp send_msg_impl(payload = %{from: user}, state) do
     # throttle sender
-    with false <- should_throttle?(from, state),
-         false <- user_banned?(from, state) do
+    with false <- should_throttle?(user, state),
+         false <- user_banned?(user, state) do
       dispatch_message(payload, state)
-      updated_message_map = Map.put(state.last_message_map, from, DateTime.utc_now())
+      updated_message_map = Map.put(state.last_message_map, user, DateTime.utc_now())
       new_state = %{state | last_message_map: updated_message_map}
       {:noreply, new_state}
     else
@@ -168,7 +154,7 @@ defmodule Onion.Chat do
     case payload.whisperedTo do
       [] ->
         PubSub.broadcast("chat:" <> state.room_id, %Broth.Message{
-          operator: "chat:send",
+          operator: "chat:sent",
           payload: payload
         })
 
@@ -188,7 +174,7 @@ defmodule Onion.Chat do
         |> List.insert_at(0, payload.from)
         |> Enum.each(fn recipient_id ->
           PubSub.broadcast("chat:" <> recipient_id, %Broth.Message{
-            operator: "chat:send",
+            operator: "chat:sent",
             payload: payload
           })
         end)

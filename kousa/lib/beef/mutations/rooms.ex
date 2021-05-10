@@ -42,6 +42,7 @@ defmodule Beef.Mutations.Rooms do
       room = %{attendees: [%{id: ^user_id}]} ->
         delete_room_by_id(room_id)
         {:deleted, room}
+
       room = %{creatorId: ^user_id} ->
         # replace this as a lens:
         new_creator_id = Beef.Rooms.get_next_creator_for_room(room_id)
@@ -51,11 +52,13 @@ defmodule Beef.Mutations.Rooms do
 
         room
         |> Room.change_owner(%{creatorId: new_creator_id})
-        |> Repo.update
+        |> Repo.update()
+
       room ->
         if Enum.any?(room.attendees, &(&1.id == user_id)) do
           Beef.Users.set_user_left_current_room(user_id)
         end
+
         {:ok, %{room | attendees: Enum.reject(room.attendees, &(&1.id == user_id))}}
     end
   end

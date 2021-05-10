@@ -74,9 +74,6 @@ defmodule Onion.RoomSession do
     # adopt callers from the call point.
     Process.put(:"$callers", init.callers)
 
-    # also launch a linked, supervised room.
-    Onion.Chat.start_link_supervised(init.room.id)
-
     # broadcast a notification that room has been created.
     PubSub.broadcast("room:all", init.room)
 
@@ -95,28 +92,33 @@ defmodule Onion.RoomSession do
     match?([_], Registry.lookup(@registry, room_id))
   end
 
-  def ws_fan(_, _), do: raise "use PubSub!"
+  def ws_fan(_, _), do: raise("use PubSub!")
 
   def update(room_id, changeset), do: call(room_id, {:update, changeset})
 
   defp update_impl(changeset, _reply, state) do
     changes = changeset.changes
-    {reply, new_state} = case Rooms.update(changeset) do
-      {:ok, room} ->
-        if Map.has_key?(changes, :isPrivate) do
-          # send the room_privacy_change message.
-          PubSub.broadcast("room:" <> room.id, %Broth.Message.Room.PrivacyUpdate{
-            isPrivate: changes.isPrivate,
-            name: room.name,
-            roomId: room.id
-          })
-        end
 
-        # generic room update
-        PubSub.broadcast("room:" <> room.id, room)
-        {{:ok, room}, %{state | room: room}}
-      error -> error
-    end
+    {reply, new_state} =
+      case Rooms.update(changeset) do
+        {:ok, room} ->
+          if Map.has_key?(changes, :isPrivate) do
+            # send the room_privacy_change message.
+            PubSub.broadcast("room:" <> room.id, %Broth.Message.Room.PrivacyUpdate{
+              isPrivate: changes.isPrivate,
+              name: room.name,
+              roomId: room.id
+            })
+          end
+
+          # generic room update
+          PubSub.broadcast("room:" <> room.id, room)
+          {{:ok, room}, %{state | room: room}}
+
+        error ->
+          error
+      end
+
     {:reply, reply, new_state}
   end
 

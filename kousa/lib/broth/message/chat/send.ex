@@ -126,7 +126,7 @@ defmodule Broth.Message.Chat.Send do
   def execute(changeset, state) do
     with {:ok, payload} <- apply_action(changeset, :validate) do
       # note that payload bears the user_id inside of its `from` parameter.
-      Kousa.Chat.send_msg(payload)
+      Kousa.Chat.send_msg(payload, to: state.user.currentRoom)
       {:noreply, state}
     end
   end

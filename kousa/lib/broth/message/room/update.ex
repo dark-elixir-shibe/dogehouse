@@ -36,14 +36,19 @@ defmodule Broth.Message.Room.Update do
     |> validate_required([:name])
   end
 
-  def execute(changeset, state = %{user: %{id: owner_id, currentRoom: %{id: room_id, creatorId: owner_id}}}) do
+  def execute(
+        changeset,
+        state = %{user: %{id: owner_id, currentRoom: %{id: room_id, creatorId: owner_id}}}
+      ) do
     case Kousa.Room.update(room_id, changeset) do
       {:ok, update} ->
         new_user = %{state.user | currentRoom: update}
         {:reply, struct(__MODULE__, Map.from_struct(update)), %{state | user: new_user}}
-      error -> error
+
+      error ->
+        error
     end
   end
-  def execute(_, _), do: {:error, "permission denied"}
 
+  def execute(_, _), do: {:error, "permission denied"}
 end

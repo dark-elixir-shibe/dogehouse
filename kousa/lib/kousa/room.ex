@@ -80,11 +80,6 @@ defmodule Kousa.Room do
     end
   end
 
-  @spec block_from_room(String.t(), String.t(), boolean()) ::
-          nil
-          | :ok
-          | {:askedToSpeak | :creator | :listener | :mod | nil | :speaker,
-             atom | %{:creatorId => any, optional(any) => any}}
   def block_from_room(user_id, user_id_to_block_from_room, should_ban_ip \\ false) do
     with {status, room} when status in [:creator, :mod] <-
            Rooms.get_room_status(user_id) do
@@ -161,6 +156,7 @@ defmodule Kousa.Room do
     |> case do
       {:ok, room} ->
         Onion.RoomSession.start_supervised(room)
+        Onion.Chat.start_supervised(room.id)
 
         # send commands to the Voice AMQP channel
         # TODO: move this into Onion.RoomSession

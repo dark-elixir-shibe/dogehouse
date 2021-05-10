@@ -59,7 +59,6 @@ defmodule Kousa.User do
     with false <- Users.bot?(user),
          bots when length(bots) <= 100 <- user.bots,
          {:ok, bot_user} <- Users.create_bot(user, botname) do
-
       # TODO: broadcast new state
       {:ok, bot_user.apiKey, %{user | bots: [bot_user | user.bots]}}
     else

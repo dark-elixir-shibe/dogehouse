@@ -35,11 +35,13 @@ defmodule BrothTest.Chat.BanTest do
 
       # join the speaker user into the room
       WsClient.do_call(banned_ws, "room:join", %{"roomId" => room_id})
-      WsClient.assert_frame_legacy("new_user_join_room", _)
+      WsClient.assert_frame("room:joined", _)
 
-      WsClient.send_msg(t.user_ws, "chat:ban", %{"userId" => banned_id})
-      WsClient.assert_frame_legacy("chat_user_banned", %{"userId" => ^banned_id}, t.user_ws)
-      WsClient.assert_frame_legacy("chat_user_banned", %{"userId" => ^banned_id}, banned_ws)
+      ref = WsClient.send_call(t.user_ws, "chat:ban", %{"userId" => banned_id})
+      WsClient.assert_empty_reply(ref)
+
+      WsClient.assert_frame("chat:banned", %{"userId" => ^banned_id}, t.user_ws)
+      WsClient.assert_frame("chat:banned", %{"userId" => ^banned_id}, banned_ws)
 
       assert Onion.Chat.banned?(room_id, banned_id)
     end

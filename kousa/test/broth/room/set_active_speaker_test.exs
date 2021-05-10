@@ -34,11 +34,12 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
 
       WsClient.assert_frame("room:joined", _)
 
-      ref = WsClient.send_call(
-        t.user_ws,
-        "room:set_active_speaker",
-        %{"active" => true}
-      )
+      ref =
+        WsClient.send_call(
+          t.user_ws,
+          "room:set_active_speaker",
+          %{"active" => true}
+        )
 
       WsClient.assert_empty_reply(ref)
 
@@ -62,11 +63,12 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
 
       Process.sleep(100)
 
-      ref = WsClient.send_call(
-        t.user_ws,
-        "room:set_active_speaker",
-        %{"active" => false}
-      )
+      ref =
+        WsClient.send_call(
+          t.user_ws,
+          "room:set_active_speaker",
+          %{"active" => false}
+        )
 
       WsClient.assert_empty_reply(ref)
 

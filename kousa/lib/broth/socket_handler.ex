@@ -132,9 +132,20 @@ defmodule Broth.SocketHandler do
   ##########################################################################
   ## CHAT MESSAGES
 
-  def chat_impl({"chat:" <> _room_id, message}, state) do
+  def chat_impl({"chat:" <> _room_id, message = %Broth.Message{}}, state) do
     # TODO: make this guard against room_id or self_id when we put room into the state.
+    # TODO: roll this into the format below:
     message
+    |> adopt_version(state)
+    |> prepare_socket_msg(state)
+    |> ws_push(state)
+  end
+
+  def chat_impl(
+        {"chat:" <> room_id, msg = %op{}},
+        state = %{user: %{currentRoomId: room_id}}
+      ) do
+    %Broth.Message{operator: op.code(), payload: msg}
     |> adopt_version(state)
     |> prepare_socket_msg(state)
     |> ws_push(state)
@@ -247,11 +258,12 @@ defmodule Broth.SocketHandler do
   end
 
   defp wrap_error(message, error) do
-    operator = if message.reference do
-      message.inbound_operator <> ":reply"
-    else
-      message.inbound_operator
-    end
+    operator =
+      if message.reference do
+        message.inbound_operator <> ":reply"
+      else
+        message.inbound_operator
+      end
 
     Map.merge(
       message,

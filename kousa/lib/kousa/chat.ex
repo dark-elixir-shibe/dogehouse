@@ -4,47 +4,34 @@ defmodule Kousa.Chat do
   alias Kousa.Utils.UUID
   alias Onion.Chat
 
-  def send_msg(payload) do
-    # TODO: pull room information from passed parameters from ws_session.
-    case Beef.Users.get_current_room_id(payload.from) do
-      nil ->
-        :noop
-
-      room_id ->
-        Onion.Chat.send_msg(room_id, payload)
-    end
-
-    :ok
+  def send_msg(_payload, to: nil), do: nil
+  def send_msg(payload, to: room) do
+    Onion.Chat.send_msg(room.id, payload)
   end
 
-  @ban_roles [:creator, :mod]
+  @ban_roles [:owner, :mod]
 
-  def ban_user(user_id, user_id_to_ban) do
-    room =
-      case Rooms.get_room_status(user_id) do
-        {role, room = %{creatorId: creator_id}}
-        when role in @ban_roles and creator_id != user_id_to_ban ->
-          room
+  def ban_user(user_id, opts) do
+    agent = opts[:by]
 
-        _ ->
-          nil
-      end
-
-    if room do
-      Chat.ban_user(room.id, user_id_to_ban)
-      :ok
-    else
-      {:error, "#{user_id} not authorized to ban #{user_id_to_ban}"}
-    end
-  end
-
-  def unban_user(user_id, user_id_to_unban) do
-    case Rooms.get_room_status(user_id) do
-      {role, room} when role in @ban_roles ->
-        Chat.unban_user(room.id, user_id_to_unban)
+    case Beef.Users.room_auth(agent) do
+      role when role in @ban_roles ->
+        Chat.ban_user(agent.currentRoomId, user_id)
 
       _ ->
-        nil
+        {:error, "#{agent.id} not authorized to ban #{user_id}"}
+    end
+  end
+
+  def unban_user(user_id, opts) do
+    agent = opts[:by]
+
+    case Beef.Users.room_auth(agent) do
+      role when role in @ban_roles ->
+        Chat.unban_user(agent.currentRoomId, user_id)
+
+      _ ->
+        {:error, "#{agent.id} not authorized to unban #{user_id}"}
     end
   end
 

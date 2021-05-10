@@ -18,7 +18,7 @@ defmodule Broth.Message.Chat.Unban do
   def execute(changeset, state) do
     with {:ok, %{userId: userId}} <- apply_action(changeset, :validate) do
       # TODO: change to by: format
-      Kousa.Chat.unban_user(state.user.id, userId)
+      Kousa.Chat.unban_user(userId, by: state.user)
       {:reply, %Empty{}, state}
     end
   end

@@ -36,12 +36,12 @@ defmodule BrothTest.Chat.SendTest do
       listener_ws = WsClientFactory.create_client_for(listener)
 
       WsClient.do_call(listener_ws, "room:join", %{"roomId" => room_id})
-      WsClient.assert_frame_legacy("new_user_join_room", _)
+      WsClient.assert_frame("room:joined", _)
 
       WsClient.send_msg(t.user_ws, "chat:send_msg", %{"tokens" => @text_token})
 
       WsClient.assert_frame(
-        "chat:send",
+        "chat:sent",
         %{
           "tokens" => @text_token,
           "sentAt" => _,
@@ -53,7 +53,7 @@ defmodule BrothTest.Chat.SendTest do
       )
 
       WsClient.assert_frame(
-        "chat:send",
+        "chat:sent",
         %{
           "tokens" => @text_token,
           "sentAt" => _,
@@ -81,9 +81,9 @@ defmodule BrothTest.Chat.SendTest do
       WsClient.do_call(cant_hear_ws, "room:join", %{"roomId" => room_id})
       WsClient.do_call(can_hear_ws, "room:join", %{"roomId" => room_id})
 
-      WsClient.assert_frame_legacy("new_user_join_room", _, t.user_ws)
-      WsClient.assert_frame_legacy("new_user_join_room", _, t.user_ws)
-      WsClient.assert_frame_legacy("new_user_join_room", _, cant_hear_ws)
+      WsClient.assert_frame("room:joined", _, t.user_ws)
+      WsClient.assert_frame("room:joined", _, t.user_ws)
+      WsClient.assert_frame("room:joined", _, cant_hear_ws)
 
       WsClient.send_msg(t.user_ws, "chat:send_msg", %{
         "tokens" => @text_token,
@@ -91,7 +91,7 @@ defmodule BrothTest.Chat.SendTest do
       })
 
       WsClient.assert_frame(
-        "chat:send",
+        "chat:sent",
         %{
           "tokens" => @text_token,
           "from" => ^user_id,
@@ -103,7 +103,7 @@ defmodule BrothTest.Chat.SendTest do
       )
 
       WsClient.assert_frame(
-        "chat:send",
+        "chat:sent",
         %{
           "tokens" => @text_token,
           "from" => ^user_id,
@@ -114,7 +114,7 @@ defmodule BrothTest.Chat.SendTest do
         can_hear_ws
       )
 
-      WsClient.refute_frame("chat:send", cant_hear_ws)
+      WsClient.refute_frame("chat:sent", cant_hear_ws)
     end
   end
 
@@ -128,18 +128,19 @@ defmodule BrothTest.Chat.SendTest do
       banned_ws = WsClientFactory.create_client_for(banned)
 
       WsClient.do_call(banned_ws, "room:join", %{"roomId" => room_id})
-      WsClient.assert_frame_legacy("new_user_join_room", _)
+      WsClient.assert_frame("room:joined", _)
 
       # ban the new user
-      WsClient.send_msg(t.user_ws, "chat:ban", %{"userId" => banned.id})
+      ref = WsClient.send_call(t.user_ws, "chat:ban", %{"userId" => banned.id})
+      WsClient.assert_empty_reply(ref)
 
-      WsClient.assert_frame_legacy("chat_user_banned", _)
-      WsClient.assert_frame_legacy("chat_user_banned", _)
+      WsClient.assert_frame("chat:banned", _)
+      WsClient.assert_frame("chat:banned", _)
 
       WsClient.send_msg(banned_ws, "chat:send_msg", %{"tokens" => @text_token})
 
-      WsClient.refute_frame("chat:send", t.user_ws)
-      WsClient.refute_frame("chat:send", banned_ws)
+      WsClient.refute_frame("chat:sent", t.user_ws)
+      WsClient.refute_frame("chat:sent", banned_ws)
     end
 
     test "if they have been blocked by the user", t do
@@ -151,7 +152,7 @@ defmodule BrothTest.Chat.SendTest do
       blocked_ws = WsClientFactory.create_client_for(blocked)
 
       WsClient.do_call(blocked_ws, "room:join", %{"roomId" => room_id})
-      WsClient.assert_frame_legacy("new_user_join_room", _)
+      WsClient.assert_frame("room:joined", _)
 
       # block the new user
       WsClient.do_call(t.user_ws, "user:block", %{"userId" => blocked.id})
@@ -162,9 +163,9 @@ defmodule BrothTest.Chat.SendTest do
         %{"tokens" => @text_token, "whisperedTo" => [user_id]}
       )
 
-      WsClient.refute_frame("chat:send", t.user_ws)
+      WsClient.refute_frame("chat:sent", t.user_ws)
       # you will still get the message yourself.
-      WsClient.assert_frame("chat:send", _, blocked_ws)
+      WsClient.assert_frame("chat:sent", _, blocked_ws)
     end
   end
 end

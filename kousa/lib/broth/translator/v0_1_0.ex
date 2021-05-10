@@ -286,7 +286,7 @@ defmodule Broth.Translator.V0_1_0 do
   #################################################################
   # autogenous messages
 
-  def translate_out_body(message, "chat:send") do
+  def translate_out_body(message, "chat:sent") do
     user_info =
       message.d.from
       |> Beef.Users.get_by_id()
