@@ -32,55 +32,54 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
       other_ws = WsClientFactory.create_client_for(other)
       WsClient.do_call(other_ws, "room:join", %{"roomId" => room_id})
 
-      WsClient.assert_frame_legacy("new_user_join_room", _)
+      WsClient.assert_frame("room:joined", _)
 
-      assert %{} = Onion.RoomSession.get(room_id, :activeSpeakerMap)
-
-      WsClient.send_msg(
+      ref = WsClient.send_call(
         t.user_ws,
         "room:set_active_speaker",
         %{"active" => true}
       )
 
+      WsClient.assert_empty_reply(ref)
+
       # both websockets will be informed
-      WsClient.assert_frame_legacy(
-        "active_speaker_change",
+      WsClient.assert_frame(
+        "room:speaking_update",
         %{"activeSpeakerMap" => map},
         t.user_ws
       )
 
       assert is_map_key(map, t.user.id)
 
-      WsClient.assert_frame_legacy(
-        "active_speaker_change",
+      WsClient.assert_frame(
+        "room:speaking_update",
         %{"activeSpeakerMap" => map},
         other_ws
       )
 
       assert is_map_key(map, t.user.id)
-
-      map = Onion.RoomSession.get(room_id, :activeSpeakerMap)
-
-      assert is_map_key(map, t.user.id)
+      assert t.user.id in Onion.RoomSession.get(room_id, :activeSpeakerMap)
 
       Process.sleep(100)
 
-      WsClient.send_msg(
+      ref = WsClient.send_call(
         t.user_ws,
         "room:set_active_speaker",
         %{"active" => false}
       )
 
-      WsClient.assert_frame_legacy(
-        "active_speaker_change",
+      WsClient.assert_empty_reply(ref)
+
+      WsClient.assert_frame(
+        "room:speaking_update",
         %{"activeSpeakerMap" => map},
         t.user_ws
       )
 
       refute is_map_key(map, t.user.id)
 
-      WsClient.assert_frame_legacy(
-        "active_speaker_change",
+      WsClient.assert_frame(
+        "room:speaking_update",
         %{"activeSpeakerMap" => map},
         other_ws
       )
@@ -100,26 +99,24 @@ defmodule BrothTest.Room.SetActiveSpeakerTest do
       other_ws = WsClientFactory.create_client_for(other)
       WsClient.do_call(other_ws, "room:join", %{"roomId" => room_id})
 
-      WsClient.assert_frame_legacy("new_user_join_room", _)
+      WsClient.assert_frame("room:joined", _)
 
       Onion.RoomSession.get(room_id, :activeSpeakerMap)
 
-      WsClient.send_msg(
+      WsClient.send_call(
         t.user_ws,
         "room:set_active_speaker",
         %{"active" => false}
       )
 
-      WsClient.assert_frame_legacy(
-        "active_speaker_change",
+      WsClient.assert_frame(
+        "room:speaking_update",
         %{"activeSpeakerMap" => map}
       )
 
       assert map == %{}
 
-      map = Onion.RoomSession.get(room_id, :activeSpeakerMap)
-
-      assert map == %{}
+      assert MapSet.new([]) == Onion.RoomSession.get(room_id, :activeSpeakerMap)
     end
   end
 end

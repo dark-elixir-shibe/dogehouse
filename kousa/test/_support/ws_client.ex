@@ -150,8 +150,10 @@ defmodule BrothTest.WsClient do
       {op, ref, from} = unquote(ref)
       reply_op = op <> ":reply"
       ExUnit.Assertions.assert_receive({:text, msg = %{"op" => ^reply_op, "ref" => ^ref}, ^from})
-      ExUnit.Assertions.assert(msg["p"] == %{})
-      ExUnit.Assertions.refute(msg["e"])
+      error = msg["e"]
+      payload = msg["p"]
+      ExUnit.Assertions.refute(error)
+      ExUnit.Assertions.assert(payload == %{})
     end
   end
 

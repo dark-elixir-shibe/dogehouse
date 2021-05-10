@@ -126,25 +126,27 @@ defmodule Onion.RoomSession do
   end
 
   defp speaking_change_impl(user_id, value, state) when is_boolean(value) do
-    muteMap = if value, do: Map.delete(state.muteMap, user_id), else: state.muteMap
-    deafMap = if value, do: Map.delete(state.deafMap, user_id), else: state.deafMap
+    alias Broth.Message.Room.SpeakingUpdate
 
-    newActiveSpeakerMap =
+    muteMap = if value, do: MapSet.delete(state.muteMap, user_id), else: state.muteMap
+    deafMap = if value, do: MapSet.delete(state.deafMap, user_id), else: state.deafMap
+
+    activeSpeakerMap =
       if value,
-        do: Map.put(state.activeSpeakerMap, user_id, true),
-        else: Map.delete(state.activeSpeakerMap, user_id)
+        do: MapSet.put(state.activeSpeakerMap, user_id),
+        else: MapSet.delete(state.activeSpeakerMap, user_id)
 
-    ws_fan(state.attendees, %{
-      op: "active_speaker_change",
-      d: %{
-        activeSpeakerMap: newActiveSpeakerMap,
-        roomId: state.room_id,
+    Onion.PubSub.broadcast(
+      "room:" <> state.room.id,
+      %SpeakingUpdate{
+        activeSpeakerMap: activeSpeakerMap,
+        roomId: state.room.id,
         muteMap: muteMap,
         deafMap: deafMap
       }
-    })
+    )
 
-    {:noreply, %{state | activeSpeakerMap: newActiveSpeakerMap}}
+    {:noreply, %{state | activeSpeakerMap: activeSpeakerMap, muteMap: muteMap, deafMap: deafMap}}
   end
 
   def set_auto_speaker(room_id, value) when is_boolean(value) do
