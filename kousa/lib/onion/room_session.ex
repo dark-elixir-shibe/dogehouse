@@ -287,8 +287,8 @@ defmodule Onion.RoomSession do
 
       Onion.Chat.add_user(room_id, user_id)
 
-      muteMap = mapset_add_if(state.muteMap, user_id, user.muted)
-      deafMap = mapset_add_if(state.deafMap, user_id, user.deafened)
+      muteMap = mapset_sync(state.muteMap, user_id, user.muted)
+      deafMap = mapset_sync(state.deafMap, user_id, user.deafened)
 
       new_state = %{state | room: updated_room, muteMap: muteMap, deafMap: deafMap}
 
@@ -309,8 +309,12 @@ defmodule Onion.RoomSession do
     end
   end
 
-  defp mapset_add_if(mapset, value, condition) do
+  defp mapset_sync(mapset, value, condition) do
     if condition, do: MapSet.put(mapset, value), else: MapSet.delete(mapset, value)
+  end
+
+  defp mapset_delete_if(mapset, value, condition) do
+    if condition, do: MapSet.delete(mapset, value), else: mapset
   end
 
   ###################################################################
@@ -338,23 +342,20 @@ defmodule Onion.RoomSession do
     changed = value != Map.has_key?(state.muteMap, user_id)
 
     if changed do
-      ws_fan(Enum.filter(state.attendees, &(&1 != user_id)), %{
-        op: "mute_changed",
-        d: %{userId: user_id, value: value, roomId: state.room_id}
+      # TO BE DEPRECATED.
+      PubSub.broadcast("room:" <> state.room.id, %Broth.Message.Room.MuteUpdate{
+        userId: user_id,
+        value: value,
+        roomId: state.room.id
       })
     end
 
     {:noreply,
      %{
        state
-       | muteMap:
-           if(not value,
-             do: Map.delete(state.muteMap, user_id),
-             else: Map.put(state.muteMap, user_id, true)
-           ),
-         activeSpeakerMap:
-           if(value, do: Map.delete(state.activeSpeakerMap, user_id), else: state.activeSpeakerMap),
-         deafMap: if(value, do: Map.delete(state.deafMap, user_id), else: state.deafMap)
+       | muteMap: mapset_sync(state.muteMap, user_id, value),
+         activeSpeakerMap: mapset_delete_if(state.activeSpeakerMap, user_id, value),
+         deafMap: mapset_delete_if(state.deafMap, user_id, value)
      }}
   end
 
@@ -373,14 +374,9 @@ defmodule Onion.RoomSession do
     {:noreply,
      %{
        state
-       | deafMap:
-           if(not value,
-             do: Map.delete(state.deafMap, user_id),
-             else: Map.put(state.deafMap, user_id, true)
-           ),
-         activeSpeakerMap:
-           if(value, do: Map.delete(state.activeSpeakerMap, user_id), else: state.activeSpeakerMap),
-         muteMap: if(value, do: Map.delete(state.muteMap, user_id), else: state.muteMap)
+       | deafMap: mapset_sync(state.deafMap, user_id, value),
+         activeSpeakerMap: mapset_delete_if(state.activeSpeakerMap, user_id, value),
+         muteMap: mapset_delete_if(state.muteMap, user_id, value)
      }}
   end
 
@@ -418,8 +414,8 @@ defmodule Onion.RoomSession do
     new_state = %{
       state
       | attendees: attendees,
-        muteMap: Map.delete(state.muteMap, user_id),
-        deafMap: Map.delete(state.deafMap, user_id)
+        muteMap: MapSet.delete(state.muteMap, user_id),
+        deafMap: MapSet.delete(state.deafMap, user_id)
     }
 
     # terminate room if it's empty

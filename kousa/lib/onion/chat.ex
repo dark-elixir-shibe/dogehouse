@@ -13,7 +13,7 @@ defmodule Onion.Chat do
   @type state :: %__MODULE__{
           room_id: String.t(),
           users: [String.t()],
-          banned: MapSet.t,
+          banned: MapSet.t(),
           last_message_map: %{optional(UUID.t()) => DateTime.t()}
         }
 

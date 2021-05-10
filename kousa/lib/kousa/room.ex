@@ -270,4 +270,9 @@ defmodule Kousa.Room do
       {:error, "you are not in a room"}
     end
   end
+
+  def mute(user = %{currentRoomId: nil}, _), do: nil
+  def mute(user, muted?) do
+    Onion.RoomSession.mute(user.currentRoomId, user.id, muted?)
+  end
 end

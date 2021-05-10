@@ -5,6 +5,7 @@ defmodule Kousa.Chat do
   alias Onion.Chat
 
   def send_msg(_payload, to: nil), do: nil
+
   def send_msg(payload, to: room) do
     Onion.Chat.send_msg(room.id, payload)
   end

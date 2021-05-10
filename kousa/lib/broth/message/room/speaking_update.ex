@@ -8,7 +8,7 @@ defmodule Broth.Message.Room.SpeakingUpdate do
   use Broth.Message.Push,
     code: "room:speaking_update"
 
-  @derive {Jason.Encoder, only: [:activeSpeakerMap, :muteMap, :deafMap]}
+  @derive {Jason.Encoder, only: ~w(activeSpeakerMap muteMap deafMap roomId)a}
   @primary_key false
   embedded_schema do
     field(:activeSpeakerMap, MapSet, of: :binary_id)
