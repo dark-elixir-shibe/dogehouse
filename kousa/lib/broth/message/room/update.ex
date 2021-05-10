@@ -2,6 +2,9 @@ defmodule Broth.Message.Room.Update do
   use Broth.Message.Call,
     reply: __MODULE__
 
+  # temporary feature.
+  def code, do: "room:update"
+
   @derive {Jason.Encoder, only: [:name, :description, :isPrivate, :autoSpeaker]}
 
   @primary_key {:id, :binary_id, []}
@@ -33,38 +36,14 @@ defmodule Broth.Message.Room.Update do
     |> validate_required([:name])
   end
 
-  def execute(changeset, state) do
-    # TODO: move this changeset stuff into Kousa itself.
-    with {:ok, update} <- apply_action(changeset, :validate),
-         {:ok, room} <- Kousa.Room.update(state.user.id, Map.from_struct(update)) do
-      changes = changeset.changes
-
-      if Map.has_key?(changes, :isPrivate) do
-        # send the room_privacy_change message.
-        Onion.RoomSession.broadcast_ws(
-          room.id,
-          %{
-            op: "room_privacy_change",
-            d: %{roomId: room.id, name: room.name, isPrivate: changes.isPrivate}
-          }
-        )
-      end
-
-      if Map.has_key?(changes, :autoSpeaker) do
-        # send the room_privacy_change message.
-        Onion.RoomSession.set_auto_speaker(
-          room.id,
-          changes.autoSpeaker
-        )
-      end
-
-      {:reply, struct(__MODULE__, Map.from_struct(room)), state}
+  def execute(changeset, state = %{user: %{id: owner_id, currentRoom: %{id: room_id, creatorId: owner_id}}}) do
+    case Kousa.Room.update(room_id, changeset) do
+      {:ok, update} ->
+        new_user = %{state.user | currentRoom: update}
+        {:reply, struct(__MODULE__, Map.from_struct(update)), %{state | user: new_user}}
+      error -> error
     end
   end
+  def execute(_, _), do: {:error, "permission denied"}
 
-  # a bit hacky -- will need to refactor using proper db changesets in
-  # the future.
-  def valid?({_, nil}), do: false
-  def valid?({_, ""}), do: false
-  def valid?(_), do: true
 end

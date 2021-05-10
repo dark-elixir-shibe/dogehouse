@@ -138,27 +138,7 @@ defmodule Kousa.Room do
   ######################################################################
   ## UPDATE
 
-  def update(user_id, data) do
-    if room = Rooms.get_room_by_creator_id(user_id) do
-      case Rooms.edit(room.id, data) do
-        ok = {:ok, room} ->
-          Onion.RoomSession.broadcast_ws(room.id, %{
-            op: "new_room_details",
-            d: %{
-              name: room.name,
-              description: room.description,
-              isPrivate: room.isPrivate,
-              roomId: room.id
-            }
-          })
-
-          ok
-
-        error = {:error, _} ->
-          error
-      end
-    end
-  end
+  defdelegate update(user_id, data), to: Onion.RoomSession
 
   def join_vc_room(room, user_id, speaker?) do
     op =

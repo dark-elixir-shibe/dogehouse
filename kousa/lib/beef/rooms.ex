@@ -21,6 +21,7 @@ defmodule Beef.Rooms do
   defdelegate count_attendees(room), to: Beef.Lenses.Rooms
 
   # MUTATION functions
+  defdelegate update(changeset), to: Beef.Repo
   defdelegate replace_owner(room, user_id), to: Beef.Mutations.Rooms
 
   defdelegate set_room_privacy_by_creator_id(user_id, isPrivate, new_name),
