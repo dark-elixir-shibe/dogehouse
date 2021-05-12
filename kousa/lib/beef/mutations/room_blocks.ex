@@ -7,12 +7,13 @@ defmodule Beef.Mutations.RoomBlocks do
   def ban(room_id, user_id, opts) do
     %RoomBlock{}
     |> RoomBlock.changeset(%{roomId: room_id, userId: user_id, modId: opts[:modId]})
-    |> Repo.insert
+    |> Repo.insert()
   end
 
   def unban(room_id, user_id) do
-    (from rb in RoomBlock,
-      where: rb.roomId == ^room_id and rb.userId == ^user_id)
-    |> Repo.delete_all
+    from(rb in RoomBlock,
+      where: rb.roomId == ^room_id and rb.userId == ^user_id
+    )
+    |> Repo.delete_all()
   end
 end

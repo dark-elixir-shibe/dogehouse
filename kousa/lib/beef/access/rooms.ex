@@ -92,9 +92,11 @@ defmodule Beef.Access.Rooms do
   end
 
   def banned?(room_id, user_id) do
-    blocks = (from rb in RoomBlock,
-      where: rb.userId == ^user_id and rb.roomId == ^room_id)
-    |> Repo.all()
+    blocks =
+      from(rb in RoomBlock,
+        where: rb.userId == ^user_id and rb.roomId == ^room_id
+      )
+      |> Repo.all()
 
     match?([_ | _], blocks)
   end

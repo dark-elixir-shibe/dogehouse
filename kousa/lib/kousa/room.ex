@@ -74,11 +74,13 @@ defmodule Kousa.Room do
 
   def ban(user_id, opts) do
     agent = %{currentRoomId: room_id} = opts[:by]
+
     case Users.room_auth(agent) do
       auth when auth in @authorized ->
         Rooms.ban(room_id, user_id, Keyword.put(opts, :modId, agent.id))
         RoomSession.leave(room_id, user_id)
         :ok
+
       _ ->
         {:error, "permission denied"}
     end
@@ -86,10 +88,12 @@ defmodule Kousa.Room do
 
   def unban(user_id, opts) do
     agent = %{currentRoomId: room_id} = opts[:by]
+
     case Users.room_auth(agent) do
       auth when auth in @authorized ->
         Rooms.unban(room_id, user_id)
         RoomSession.unban(room_id, user_id)
+
       _ ->
         {:error, "permission denied"}
     end
@@ -97,6 +101,7 @@ defmodule Kousa.Room do
 
   def get_banned_users(room_id, opts) do
     agent = Keyword.get(opts, :by)
+
     with %{currentRoomId: ^room_id} <- agent,
          :owner <- Beef.Users.room_role(agent) do
       Rooms.get_banned_users(room_id, opts)
@@ -219,7 +224,7 @@ defmodule Kousa.Room do
   # if the user is in a room, leave it, then clear the room.
   def join(room_id, user, opts) do
     # TODO here:
-    leave(room_id, user)
+    leave(user)
     join(room_id, %{user | currentRoomId: nil}, opts)
   end
 
@@ -233,54 +238,30 @@ defmodule Kousa.Room do
     })
   end
 
-  def leave(room, user), do: {:ok, room, user}
+  def leave(%{currentRoomId: nil}), do: {:error, "you are not in a room"}
+  def leave(user = %{id: user_id, currentRoomId: room_id}) do
+    case Rooms.leave(user_id, room_id) do
+      {:deleted, room} ->
+        Onion.RoomSession.destroy(room_id, user_id)
 
-  # TODO: make USER_ID trampoline to USER struct.
-  def leave(user_id, room_id \\ nil) do
-    # TODO: CRASH IF NOT IN CURRENT ROOM.
-    room_id =
-      if is_nil(room_id),
-        do: Beef.Users.get_current_room_id(user_id),
-        else: room_id
-
-    if room_id do
-      case Rooms.leave(user_id, room_id) do
-        # the room should be destroyed
-        {:deleted, room} ->
-          Onion.RoomSession.destroy(room_id, user_id)
-
-          Onion.VoiceRabbit.send(room.voiceServerId, %{
-            op: "destroy-room",
-            uid: user_id,
-            d: %{peerId: user_id, roomId: room_id}
-          })
-
-        # the room stays alive with new room creator
-        x ->
-          case x do
-            {:new_creator_id, creator_id} ->
-              Onion.RoomSession.broadcast_ws(
-                room_id,
-                %{op: "new_room_creator", d: %{roomId: room_id, userId: creator_id}}
-              )
-
-            _ ->
-              nil
-          end
-
-          Onion.RoomSession.leave(room_id, user_id)
-      end
-
-      # unsubscribe to the room chat
-      PubSub.unsubscribe("chat:" <> room_id)
-
-      {:ok, %{roomId: room_id}}
-    else
-      {:error, "you are not in a room"}
+        # TODO: move this to inside the room_session
+        Onion.VoiceRabbit.send(room.voiceServerId, %{
+          op: "destroy-room",
+          uid: user_id,
+          d: %{peerId: user_id, roomId: room_id}
+        })
+      {:new_creator_id, creator_id} ->
+        Onion.RoomSession.broadcast_ws(
+          room_id,
+          %{op: "new_room_creator", d: %{roomId: room_id, userId: creator_id}}
+        )
+      _ -> :ok
     end
+    {:ok, %{roomId: room_id}}
   end
 
-  def mute(user = %{currentRoomId: nil}, _), do: nil
+  def mute(%{currentRoomId: nil}, _), do: nil
+
   def mute(user, muted?) do
     Onion.RoomSession.mute(user.currentRoomId, user.id, muted?)
   end

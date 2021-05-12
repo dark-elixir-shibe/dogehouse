@@ -72,8 +72,7 @@ defmodule BrothTest.User.BanTest do
         "reason" => "you're a douche"
       })
 
-      # note: targeted to banned_ws
-      WsClient.assert_frame_legacy("banned", _, banned_ws)
+      WsClient.assert_frame("user:banned", _, banned_ws)
 
       # check that the room is gone.
       refute Beef.Rooms.get(room_id)

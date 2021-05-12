@@ -44,13 +44,13 @@ defmodule Kousa.User do
   def ban(user_id_to_ban, reason_for_ban, opts) do
     authorized_github_id = Application.get_env(:kousa, :ben_github_id, "")
 
-    with %{githubId: ^authorized_github_id} <- Users.get(opts[:admin_id]),
-         user_to_ban = %{} <- Users.get(user_id_to_ban) do
-      Kousa.Room.leave(user_id_to_ban, user_to_ban.currentRoomId)
-      Users.set_reason_for_ban(user_id_to_ban, reason_for_ban)
-      Onion.UserSession.send_ws(user_id_to_ban, nil, %{op: "banned", d: %{}})
-      :ok
-    else
+    case Users.get(opts[:admin_id]) do
+      %{githubId: ^authorized_github_id} ->
+        user = Users.get(user_id_to_ban)
+        Kousa.Room.leave(user)
+        Users.set_reason_for_ban(user_id_to_ban, reason_for_ban)
+        PubSub.broadcast("user:" <> user_id_to_ban, %Broth.Message.User.Banned{})
+        :ok
       _ -> {:error, "tried to ban #{user_id_to_ban} but that user didn't exist"}
     end
   end

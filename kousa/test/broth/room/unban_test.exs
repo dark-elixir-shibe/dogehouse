@@ -32,7 +32,7 @@ defmodule BrothTest.Room.UnbanTest do
 
       # create a blocked user that is logged in.
       %{id: blocked_id} = Factory.create(User)
-      
+
       Beef.RoomBlocks.insert(%{
         userId: blocked_id,
         roomId: room_id,

@@ -1,6 +1,7 @@
 defmodule Broth.SocketHandler do
   require Logger
   import Kousa.Utils.Version
+  alias Beef.Schemas.User
 
   defstruct user: nil,
             ip: nil,
@@ -10,7 +11,7 @@ defmodule Broth.SocketHandler do
             callers: []
 
   @type state :: %__MODULE__{
-          user: nil | Beef.Schemas.User.t(),
+          user: nil | User.t(),
           ip: String.t(),
           encoding: :etf | :json,
           compression: nil | :zlib,
@@ -105,11 +106,18 @@ defmodule Broth.SocketHandler do
   ##########################################################################
   ## USER UPDATES
 
-  def user_update_impl({"user:" <> user_id, user}, state = %{user: %{id: user_id}}) do
+  def user_update_impl({"user:" <> user_id, user = %User{}}, state) do
     %Broth.Message{operator: "user:update", payload: user}
     |> adopt_version(state)
     |> prepare_socket_msg(state)
     |> ws_push(%{state | user: user})
+  end
+
+  def user_update_impl({"user:" <> user_id, msg = %op{}}, state = %{user: %{id: user_id}}) do
+    %Broth.Message{operator: op.code, payload: msg}
+    |> adopt_version(state)
+    |> prepare_socket_msg(state)
+    |> ws_push(state)
   end
 
   def user_update_impl(_, state), do: ws_push(nil, state)

@@ -178,13 +178,6 @@ defmodule Onion.RoomSession do
     {:noreply, %{state | auto_speaker: value}}
   end
 
-  def broadcast_ws(room_id, msg), do: cast(room_id, {:broadcast_ws, msg})
-
-  defp broadcast_ws_impl(msg, state) do
-    ws_fan(state.attendees, msg)
-    {:noreply, state}
-  end
-
   def create_invite(room_id, user_id, user_info) do
     cast(room_id, {:create_invite, user_id, user_info})
   end
@@ -259,15 +252,15 @@ defmodule Onion.RoomSession do
       uid: user_id
     })
 
-    ws_fan(state.attendees, %{
-      op: "speaker_added",
-      d: %{
+    Onion.PubSub.broadcast(
+      "room:" <> state.room_id,
+      %Broth.Message.Room.SpeakerAdded{
         userId: user_id,
         roomId: state.room_id,
         muteMap: new_mm,
         deafMap: new_dm
       }
-    })
+    )
 
     {:noreply, %{state | muteMap: new_mm, deafMap: new_dm}}
   end
@@ -383,12 +376,11 @@ defmodule Onion.RoomSession do
   def destroy(room_id, user_id), do: cast(room_id, {:destroy, user_id})
 
   defp destroy_impl(user_id, state) do
-    attendees = Enum.filter(state.attendees, fn uid -> uid != user_id end)
+    room_id = state.room.id
 
-    ws_fan(attendees, %{
-      op: "room_destroyed",
-      d: %{roomId: state.room.id}
-    })
+    PubSub.broadcast(
+      "room:" <> room_id,
+      %Broth.Message.Room.Destroyed{roomId: room_id})
 
     {:stop, :normal, state}
   end
@@ -469,10 +461,6 @@ defmodule Onion.RoomSession do
 
   def handle_cast({:set_auto_speaker, value}, state) do
     set_auto_speaker_impl(value, state)
-  end
-
-  def handle_cast({:broadcast_ws, msg}, state) do
-    broadcast_ws_impl(msg, state)
   end
 
   def handle_cast({:create_invite, user_id, user_info}, state) do
