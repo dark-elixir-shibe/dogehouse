@@ -5,12 +5,14 @@ defmodule Broth.Message.Room.Leave do
     schema: Empty,
     reply: Empty
 
+  def initialize(_), do: %Empty{}
+
   def changeset(initializer \\ %Empty{}, data) do
     change(initializer, data)
   end
 
   def execute(_, state) do
-    case Kousa.Room.leave(state.user.id) do
+    case Kousa.Room.leave(state.user) do
       {:ok, _} ->
         {:reply, %Empty{}, state}
 

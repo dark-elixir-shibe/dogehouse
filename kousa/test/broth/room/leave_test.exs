@@ -33,7 +33,7 @@ defmodule BrothTest.Room.LeaveTest do
 
       ref = WsClient.send_call(t.user_ws, "room:leave", %{})
 
-      WsClient.assert_empty_reply(ref)
+      WsClient.assert_empty_reply(ref) 
 
       refute Users.get_by_id(t.user.id).currentRoomId
       refute Rooms.get(room_id)
