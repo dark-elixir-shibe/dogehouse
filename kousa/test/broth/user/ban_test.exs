@@ -50,7 +50,7 @@ defmodule BrothTest.User.BanTest do
       WsClient.assert_empty_reply(ref)
 
       # this frame is targetted to the banned user
-      WsClient.assert_frame_legacy("banned", _, banned_ws)
+      WsClient.assert_frame("user:banned", _, banned_ws)
 
       # check that the user has been updated.
       assert %{reasonForBan: "you're a douche"} = Users.get_by_id(banned.id)

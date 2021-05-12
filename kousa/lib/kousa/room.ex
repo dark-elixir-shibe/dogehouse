@@ -92,7 +92,6 @@ defmodule Kousa.Room do
     case Users.room_auth(agent) do
       auth when auth in @authorized ->
         Rooms.unban(room_id, user_id)
-        RoomSession.unban(room_id, user_id)
 
       _ ->
         {:error, "permission denied"}

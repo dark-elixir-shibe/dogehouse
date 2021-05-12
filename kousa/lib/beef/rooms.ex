@@ -15,6 +15,7 @@ defmodule Beef.Rooms do
   defdelegate get_next_creator_for_room(room_id), to: Beef.Access.Rooms
   defdelegate get_room_by_creator_id(creator_id), to: Beef.Access.Rooms
   defdelegate search_name(start_of_name), to: Beef.Access.Rooms
+  
   @spec all_rooms :: any
   defdelegate all_rooms(), to: Beef.Access.Rooms
 

@@ -31,27 +31,23 @@ defmodule BrothTest.Room.UnbanTest do
       assert %{currentRoomId: ^room_id} = Users.get_by_id(t.user.id)
 
       # create a blocked user that is logged in.
-      %{id: blocked_id} = Factory.create(User)
+      %{id: banned_id} = Factory.create(User)
 
-      Beef.RoomBlocks.insert(%{
-        userId: blocked_id,
-        roomId: room_id,
-        modId: t.user.id
-      })
+      Beef.Rooms.ban(room_id, banned_id, modId: t.user.id)
 
-      assert Beef.RoomBlocks.blocked?(room_id, blocked_id)
+      assert Beef.Rooms.banned?(room_id, banned_id)
 
       # block the person.
       ref =
         WsClient.send_call(
           t.user_ws,
           "room:unban",
-          %{"userId" => blocked_id}
+          %{"userId" => banned_id}
         )
 
       WsClient.assert_empty_reply(ref)
 
-      refute Beef.RoomBlocks.blocked?(room_id, blocked_id)
+      refute Beef.Rooms.banned?(room_id, banned_id)
     end
   end
 end
