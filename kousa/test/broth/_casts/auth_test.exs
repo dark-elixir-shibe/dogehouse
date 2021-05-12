@@ -12,16 +12,6 @@ defmodule BrothTest.AuthTest do
     user = %{id: user_id} = Factory.create(User)
     tokens = Kousa.Utils.TokenUtils.create_tokens(user)
 
-    on_exit(fn ->
-      case Registry.lookup(Onion.UserSessionRegistry, user_id) do
-        [{usersession_pid, _}] ->
-          Process.link(usersession_pid)
-
-        _ ->
-          :ok
-      end
-    end)
-
     {:ok, tokens: tokens, user_id: user_id}
   end
 
