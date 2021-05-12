@@ -3,8 +3,6 @@ defmodule Beef.Mutations.Rooms do
 
   alias Beef.Repo
   alias Beef.Schemas.Room
-  alias Beef.Users
-  alias Beef.Schemas.User
 
   def replace_owner(room, user_id) do
     room
@@ -28,13 +26,6 @@ defmodule Beef.Mutations.Rooms do
 
   def delete_room_by_id(room_id) do
     %Room{id: room_id} |> Repo.delete()
-  end
-
-  # trusts that the user is in the room
-  def kick_from_room(user_id, room_id) do
-    room = Beef.Rooms.get(room_id)
-    Beef.Users.set_user_left_current_room(user_id)
-    new_people_list = Enum.filter(room.peoplePreviewList, fn x -> x.id != user_id end)
   end
 
   def leave(user_id, room_id) do
@@ -81,7 +72,7 @@ defmodule Beef.Mutations.Rooms do
 
     user = Beef.Users.get_by_id(data.creatorId)
 
-    peoplePreviewList = [
+    _peoplePreviewList = [
       %{
         id: user.id,
         displayName: user.displayName,

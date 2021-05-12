@@ -10,19 +10,7 @@ defmodule Kousa.User do
   def update_with(changeset = %Ecto.Changeset{}) do
     case Users.update(changeset) do
       {:ok, user} ->
-        # TODO: clean this up by making Onion.UserSession adopt the User schema and having it
-        # accept pubsub broadcast messages.
-
-        Onion.UserSession.set_state(
-          user.id,
-          %{
-            display_name: user.displayName,
-            username: user.username,
-            avatar_url: user.avatarUrl,
-            banner_url: user.bannerUrl
-          }
-        )
-
+        
         PubSub.broadcast("user:" <> user.id, user)
         {:ok, user}
 

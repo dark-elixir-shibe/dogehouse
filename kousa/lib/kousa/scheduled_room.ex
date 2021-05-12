@@ -3,15 +3,16 @@ defmodule Kousa.ScheduledRoom do
   alias Beef.Schemas.ScheduledRoom
   alias Beef.ScheduledRooms
 
-  def create_room_from_scheduled_room(user_id, scheduled_room_id, name, description) do
-    case Kousa.Room.create_room(user_id, name, description, false) do
-      {:ok, response} ->
-        ScheduledRooms.room_started(user_id, scheduled_room_id, response.room.id)
-        {:ok, response}
-
-      error ->
-        error
-    end
+  def create_room_from_scheduled_room(_user_id, _scheduled_room_id, _name, _description) do
+    raise "XXX"
+    #case Kousa.Room.create_room(user_id, name, description, false) do
+    #  {:ok, response} ->
+    #    ScheduledRooms.room_started(user_id, scheduled_room_id, response.room.id)
+    #    {:ok, response}
+#
+    #  error ->
+    #    error
+    #end
   end
 
   def delete(user_id, id) do

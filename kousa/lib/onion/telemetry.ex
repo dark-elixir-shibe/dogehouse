@@ -11,7 +11,7 @@ defmodule Onion.Telemetry do
   end
 
   def handle_info(:collect_metrics, state) do
-    Kousa.Metric.UserSessions.set(Onion.UserSession.count())
+    # TODO: COUNT NUMBER OF CONNECTIONS
     {:noreply, state}
   end
 end

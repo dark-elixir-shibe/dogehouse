@@ -41,7 +41,6 @@ defmodule Broth.Message.Cast do
 
   @callback auth_check(SocketHandler.state()) :: :ok | {:error, :auth}
 
-  @callback changeset(Broth.json()) :: Ecto.Changeset.t()
   @callback changeset(struct | nil, Broth.json()) :: Ecto.Changeset.t()
 
   @callback initialize(SocketHandler.state()) :: struct()

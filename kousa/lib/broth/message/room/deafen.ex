@@ -17,8 +17,8 @@ defmodule Broth.Message.Room.Deafen do
   end
 
   def execute(changeset, state) do
-    with {:ok, %{deafened: deafened?}} <- apply_action(changeset, :validation) do
-      Onion.UserSession.set_deafen(state.user.id, deafened?)
+    with {:ok, %{deafened: _deafened?}} <- apply_action(changeset, :validation) do
+      raise "foo"
       {:reply, %Empty{}, state}
     end
   end

@@ -32,11 +32,7 @@ defmodule BrothTest.UnbanFromRoomTest do
       # create a blocked user that is logged in.
       %{id: blocked_id} = Factory.create(User)
 
-      Beef.RoomBlocks.insert(%{
-        userId: blocked_id,
-        roomId: room_id,
-        modId: t.user.id
-      })
+      Beef.Rooms.ban(room_id, blocked_id, modId: t.user_id)
 
       assert Beef.RoomBlocks.blocked?(room_id, blocked_id)
 
@@ -50,7 +46,7 @@ defmodule BrothTest.UnbanFromRoomTest do
 
       WsClient.assert_reply_legacy(ref, %{})
 
-      refute Beef.RoomBlocks.blocked?(room_id, blocked_id)
+      refute Beef.Rooms.banned?(room_id, blocked_id)
     end
   end
 end

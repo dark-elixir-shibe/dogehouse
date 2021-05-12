@@ -20,11 +20,12 @@ defmodule Kousa.Room do
   def make_room_public(user_id, new_name) do
     # this needs to be refactored if a user can have multiple rooms
     case Beef.Rooms.set_room_privacy_by_creator_id(user_id, false, new_name) do
-      {1, [room]} ->
-        Onion.RoomSession.broadcast_ws(
-          room.id,
-          %{op: "room_privacy_change", d: %{roomId: room.id, name: room.name, isPrivate: false}}
-        )
+      {1, [_room]} ->
+        raise "foo"
+        #Onion.RoomSession.broadcast_ws(
+        #  room.id,
+        #  %{op: "room_privacy_change", d: %{roomId: room.id, name: room.name, isPrivate: false}}
+        #)
 
       _ ->
         nil
@@ -32,18 +33,19 @@ defmodule Kousa.Room do
   end
 
   @spec make_room_private(any, any) :: nil | :ok
-  def make_room_private(user_id, new_name) do
+  def make_room_private(_user_id, _new_name) do
     # this needs to be refactored if a user can have multiple rooms
-    case Rooms.set_room_privacy_by_creator_id(user_id, true, new_name) do
-      {1, [room]} ->
-        Onion.RoomSession.broadcast_ws(
-          room.id,
-          %{op: "room_privacy_change", d: %{roomId: room.id, name: room.name, isPrivate: true}}
-        )
-
-      _ ->
-        nil
-    end
+    raise "NNN"
+    #case Rooms.set_room_privacy_by_creator_id(user_id, true, new_name) do
+    #  {1, [room]} ->
+    #    Onion.RoomSession.broadcast_ws(
+    #      room.id,
+    #      %{op: "room_privacy_change", d: %{roomId: room.id, name: room.name, isPrivate: true}}
+    #    )
+#
+    #  _ ->
+    #    nil
+    #end
   end
 
   def invite_to_room(user_id, user_id_to_invite) do
@@ -238,7 +240,7 @@ defmodule Kousa.Room do
   end
 
   def leave(%{currentRoomId: nil}), do: {:error, "you are not in a room"}
-  def leave(user = %{id: user_id, currentRoomId: room_id}) do
+  def leave(%{id: user_id, currentRoomId: room_id}) do
     case Rooms.leave(user_id, room_id) do
       {:deleted, room} ->
         Onion.RoomSession.destroy(room_id, user_id)
@@ -249,11 +251,12 @@ defmodule Kousa.Room do
           uid: user_id,
           d: %{peerId: user_id, roomId: room_id}
         })
-      {:new_creator_id, creator_id} ->
-        Onion.RoomSession.broadcast_ws(
-          room_id,
-          %{op: "new_room_creator", d: %{roomId: room_id, userId: creator_id}}
-        )
+      {:new_creator_id, _creator_id} ->
+        raise "Use PubSub"
+        #Onion.RoomSession.broadcast_ws(
+        #  room_id,
+        #  %{op: "new_room_creator", d: %{roomId: room_id, userId: creator_id}}
+        #)
       _ -> :ok
     end
     {:ok, %{roomId: room_id}}

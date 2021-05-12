@@ -13,9 +13,8 @@ defmodule Beef.Users do
 
   # ACCESS functions
   defdelegate get(user_id), to: Beef.Access.Users
-  # not implemented yet:
-  defdelegate get(user_id, opts), to: Beef.Access.Users
 
+  # TODO: punt this to get/2
   defdelegate find_by_github_ids(ids), to: Beef.Access.Users
   defdelegate search(query, offset), to: Beef.Access.Users
 
@@ -31,14 +30,7 @@ defmodule Beef.Users do
   defdelegate get_by_username_with_follow_info(user_id, username), to: Beef.Access.Users
   defdelegate search_username(username), to: Beef.Access.Users
 
-  defdelegate get_users_in_current_room(user_id), to: Beef.Access.Users
-  defdelegate tuple_get_current_room_id(user_id), to: Beef.Access.Users
-  defdelegate get_by_id_with_current_room(user_id), to: Beef.Access.Users
-  defdelegate get_current_room(user_id), to: Beef.Access.Users
-  defdelegate get_current_room_id(user_id), to: Beef.Access.Users
-  defdelegate get_ip(user_id), to: Beef.Access.Users
   defdelegate get_by_api_key(api_key), to: Beef.Access.Users
-  defdelegate count_bot_accounts(user_id), to: Beef.Access.Users
   # CHOPPING BLOCK
   ######################################################################################
 
@@ -55,7 +47,6 @@ defmodule Beef.Users do
 
   defdelegate join_room(user, room_id, opts), to: Beef.Mutations.Users
 
-  defdelegate edit_profile(user_id, data), to: Beef.Mutations.Users
   defdelegate delete(user_id), to: Beef.Mutations.Users
   defdelegate bulk_insert(users), to: Beef.Mutations.Users
   defdelegate inc_num_following(user_id, n), to: Beef.Mutations.Users
@@ -64,11 +55,6 @@ defmodule Beef.Users do
   defdelegate set_user_left_current_room(user_id), to: Beef.Mutations.Users
   defdelegate set_offline(user_id), to: Beef.Mutations.Users
 
-  defdelegate set_current_room(user_id, room_id), to: Beef.Mutations.Users
-
-  # TODO: make can_speak, returning, a single keyword list
-  defdelegate set_current_room(user_id, room_id, can_speak), to: Beef.Mutations.Users
-  defdelegate set_current_room(user_id, room_id, can_speak, returning), to: Beef.Mutations.Users
   defdelegate twitter_find_or_create(user), to: Beef.Mutations.Users
   defdelegate set_ip(user_id, ip), to: Beef.Mutations.Users
   defdelegate github_find_or_create(user, github_access_token), to: Beef.Mutations.Users

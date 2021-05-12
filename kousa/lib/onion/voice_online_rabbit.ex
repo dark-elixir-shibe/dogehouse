@@ -64,16 +64,16 @@ defmodule Onion.VoiceOnlineRabbit do
   end
 
   def handle_info(
-        {:basic_deliver, payload, %{delivery_tag: _tag, redelivered: _redelivered}},
+        {:basic_deliver, _payload, %{delivery_tag: _tag, redelivered: _redelivered}},
         %State{} = state
       ) do
-    case Jason.decode!(payload) do
-      %{"op" => "online"} ->
-        Onion.UserSession.force_reconnects(state.id)
-
-      _ ->
-        :ok
-    end
+    #case Jason.decode!(payload) do
+    #  %{"op" => "online"} ->
+    #    Onion.UserSession.force_reconnects(state.id)
+#
+    #  _ ->
+    #    :ok
+    #end
 
     # You might want to run payload consumption in separate Tasks in production
     # consume(chan, tag, redelivered, payload)

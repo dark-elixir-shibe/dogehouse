@@ -182,20 +182,7 @@ defmodule Onion.RoomSession do
     cast(room_id, {:create_invite, user_id, user_info})
   end
 
-  defp create_invite_impl(user_id, user_info, state) do
-    Onion.UserSession.send_ws(
-      user_id,
-      nil,
-      %{
-        op: "invitation_to_room",
-        d:
-          Map.merge(
-            %{roomId: state.room_id},
-            user_info
-          )
-      }
-    )
-
+  defp create_invite_impl(user_id, _user_info, state) do
     {:noreply,
      %{
        state
@@ -375,7 +362,7 @@ defmodule Onion.RoomSession do
 
   def destroy(room_id, user_id), do: cast(room_id, {:destroy, user_id})
 
-  defp destroy_impl(user_id, state) do
+  defp destroy_impl(_user_id, state) do
     room_id = state.room.id
 
     PubSub.broadcast(

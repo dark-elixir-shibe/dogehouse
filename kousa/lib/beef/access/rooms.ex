@@ -3,15 +3,11 @@ defmodule Beef.Access.Rooms do
   @fetch_limit 16
 
   alias Beef.Queries.Rooms, as: Query
-  alias Beef.Users
-  alias Beef.UserBlocks
   alias Beef.Repo
   alias Beef.Schemas.User
   alias Beef.Schemas.Room
   alias Beef.Schemas.UserBlock
   alias Beef.Schemas.RoomBlock
-  alias Beef.RoomPermissions
-  alias Beef.RoomBlocks
 
   def get(room_id) do
     Query.start()

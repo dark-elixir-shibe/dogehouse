@@ -6,11 +6,8 @@ defmodule Kousa do
 
     Kousa.Metric.PrometheusExporter.setup()
     Kousa.Metric.PipelineInstrumenter.setup()
-    Kousa.Metric.UserSessions.setup()
 
     children = [
-      # top-level supervisor for UserSession group
-      Onion.Supervisors.UserSession,
       Onion.Supervisors.RoomSession,
       Onion.Supervisors.Chat,
       Onion.Supervisors.VoiceRabbit,

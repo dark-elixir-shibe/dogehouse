@@ -5,7 +5,6 @@ defmodule Beef.Mutations.Users do
   alias Beef.Repo
   alias Beef.Schemas.User
   alias Beef.Queries.Users, as: Query
-  alias Beef.RoomPermissions
 
   alias Ecto.Multi
 
@@ -113,8 +112,6 @@ defmodule Beef.Mutations.Users do
   end
 
   def set_user_left_current_room(user_id) do
-    Onion.UserSession.set_current_room_id(user_id, nil)
-
     Query.start()
     |> Query.filter_by_id(user_id)
     |> Query.update_set_current_room_nil()
@@ -129,37 +126,38 @@ defmodule Beef.Mutations.Users do
     |> Repo.update_all([])
   end
 
-  def set_current_room(user_id, room_id, can_speak \\ false, returning \\ false) do
-    roomPermissions =
-      case can_speak do
-        true ->
-          case RoomPermissions.set_speaker(user_id, room_id, true, true) do
-            {:ok, x} -> x
-            _ -> nil
-          end
-
-        _ ->
-          RoomPermissions.get(user_id, room_id)
-      end
-
-    Onion.UserSession.set_current_room_id(user_id, room_id)
-
-    q =
-      from(u in User,
-        where: u.id == ^user_id,
-        update: [
-          set: [
-            currentRoomId: ^room_id
-          ]
-        ]
-      )
-
-    q = if returning, do: select(q, [u], u), else: q
-
-    case Repo.update_all(q, []) do
-      {_, [user]} -> %{user | roomPermissions: roomPermissions}
-      _ -> nil
-    end
+  def set_current_room(_user_id, _room_id, _can_speak \\ false, _returning \\ false) do
+    raise "unfinished"
+    #roomPermissions =
+    #  case can_speak do
+    #    true ->
+    #      case RoomPermissions.set_speaker(user_id, room_id, true, true) do
+    #        {:ok, x} -> x
+    #        _ -> nil
+    #      end
+#
+    #    _ ->
+    #      RoomPermissions.get(user_id, room_id)
+    #  end
+#
+    #Onion.UserSession.set_current_room_id(user_id, room_id)
+#
+    #q =
+    #  from(u in User,
+    #    where: u.id == ^user_id,
+    #    update: [
+    #      set: [
+    #        currentRoomId: ^room_id
+    #      ]
+    #    ]
+    #  )
+#
+    #q = if returning, do: select(q, [u], u), else: q
+#
+    #case Repo.update_all(q, []) do
+    #  {_, [user]} -> %{user | roomPermissions: roomPermissions}
+    #  _ -> nil
+    #end
   end
 
   def twitter_find_or_create(user) do

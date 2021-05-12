@@ -26,8 +26,6 @@ defmodule Broth.Message.Room.GetBannedUsers do
     end
   end
 
-  alias Kousa.RoomBlock
-
   def execute(changeset, state) do
     with {:ok, request} <- apply_action(changeset, :validate) do
       case Room.get_banned_users(state.user.id, request.cursor) do

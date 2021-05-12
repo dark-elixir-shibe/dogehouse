@@ -1,5 +1,4 @@
 defmodule Kousa.Chat do
-  alias Beef.Rooms
   alias Broth.Message.Chat.Delete
   alias Kousa.Utils.UUID
   alias Onion.Chat
@@ -39,30 +38,32 @@ defmodule Kousa.Chat do
   @type delete_opts :: [by: UUID.t()]
   @spec delete_msg(Delete.t(), delete_opts) :: :ok
   # Delete room chat messages
-  def delete_msg(deletion, opts) do
-    user_id = opts[:by]
+  def delete_msg(_deletion, opts) do
+    _user_id = opts[:by]
 
-    room =
-      case Rooms.get_room_status(user_id) do
-        {:creator, room} ->
-          room
+    raise "FOO"
 
-        # Mods cannot delete creator's messages
-        {:mod, room = %{creatorId: creator_id}}
-        when user_id != creator_id ->
-          room
-
-        {:listener, room} when user_id == deletion.userId ->
-          room
-
-        _ ->
-          nil
-      end
-
-    if room do
-      Onion.Chat.delete_message(room.id, deletion)
-    else
-      {:error, "#{user_id} not authorized to delete the selected message"}
-    end
+    #room =
+    #  case Rooms.get_room_status(user_id) do
+    #    {:creator, room} ->
+    #      room
+#
+    #    # Mods cannot delete creator's messages
+    #    {:mod, room = %{creatorId: creator_id}}
+    #    when user_id != creator_id ->
+    #      room
+#
+    #    {:listener, room} when user_id == deletion.userId ->
+    #      room
+#
+    #    _ ->
+    #      nil
+    #  end
+#
+    #if room do
+    #  Onion.Chat.delete_message(room.id, deletion)
+    #else
+    #  {:error, "#{user_id} not authorized to delete the selected message"}
+    #end
   end
 end

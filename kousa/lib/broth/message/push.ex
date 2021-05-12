@@ -27,10 +27,9 @@ defmodule Broth.Message.Push do
     end
   end
 
-  @callback changeset(Broth.json()) :: Ecto.Changeset.t()
   @callback operation() :: String.t()
 
-  @optional_callbacks [changeset: 1, operation: 0]
+  @optional_callbacks [operation: 0]
 
   defp code_generator(opcode) do
     quote do

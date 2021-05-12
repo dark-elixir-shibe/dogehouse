@@ -122,7 +122,7 @@ defmodule Beef.Schemas.User do
 
   def changeset(data, attrs \\ %{}) do
     data
-    |> change
+    |> cast(attrs, [:username, :displayName, :avatarUrl, :bio, :bannerUrl])
     |> validate_required([:username, :displayName, :avatarUrl])
     |> update_change(:displayName, &String.trim/1)
     |> validate_length(:bio, min: 0, max: 160)

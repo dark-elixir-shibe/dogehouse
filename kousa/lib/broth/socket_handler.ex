@@ -106,7 +106,7 @@ defmodule Broth.SocketHandler do
   ##########################################################################
   ## USER UPDATES
 
-  def user_update_impl({"user:" <> user_id, user = %User{}}, state) do
+  def user_update_impl({"user:" <> user_id, user = %User{}}, state = %{user: %{id: user_id}}) do
     %Broth.Message{operator: "user:update", payload: user}
     |> adopt_version(state)
     |> prepare_socket_msg(state)
@@ -114,7 +114,7 @@ defmodule Broth.SocketHandler do
   end
 
   def user_update_impl({"user:" <> user_id, msg = %op{}}, state = %{user: %{id: user_id}}) do
-    %Broth.Message{operator: op.code, payload: msg}
+    %Broth.Message{operator: op.code(), payload: msg}
     |> adopt_version(state)
     |> prepare_socket_msg(state)
     |> ws_push(state)

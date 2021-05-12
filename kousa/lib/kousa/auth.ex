@@ -19,38 +19,14 @@ defmodule Kousa.Auth do
     end
   end
 
-  defp do_auth(user, tokens, request, ip) do
-    alias Onion.UserSession
+  defp do_auth(user, _tokens, request, ip) do
     alias Onion.RoomSession
     alias Beef.Rooms
 
     if user do
-      # note that this will start the session and will be ignored if the
-      # session is already running.
-      UserSession.start_supervised(
-        user_id: user.id,
-        ip: ip,
-        username: user.username,
-        avatar_url: user.avatarUrl,
-        banner_url: user.bannerUrl,
-        display_name: user.displayName,
-        current_room_id: user.currentRoomId,
-        muted: request.muted,
-        deafened: request.deafened,
-        bot_owner_id: user.botOwnerId
-      )
 
       if user.ip != ip do
         Beef.Users.set_ip(user.id, ip)
-      end
-
-      # currently we only allow one active websocket connection per-user
-      # at some point soon we're going to make this multi-connection, and we
-      # won't have to do this.
-      UserSession.set_active_ws(user.id, self())
-
-      if tokens do
-        UserSession.new_tokens(user.id, tokens)
       end
 
       # can we trust this?
@@ -67,15 +43,15 @@ defmodule Kousa.Auth do
           )
 
           raise "error"
-          RoomSession.join_room(room.id, user.id, request.muted, request.deafened)
-
-          if request.reconnectToVoice == true do
-            Kousa.Room.join_vc_room(user.id, room)
-          end
+          #RoomSession.join_room(room.id, user.id, request.muted, request.deafened)
+#
+          #if request.reconnectToVoice == true do
+          #  Kousa.Room.join_vc_room(user.id, room)
+          #end
 
         roomIdFromFrontend ->
           raise "error"
-          Kousa.Room.join_room(user.id, roomIdFromFrontend)
+          #Kousa.Room.join_room(user.id, roomIdFromFrontend)
 
         true ->
           :ok

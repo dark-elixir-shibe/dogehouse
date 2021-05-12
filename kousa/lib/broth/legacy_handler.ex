@@ -31,7 +31,8 @@ defmodule Broth.LegacyHandler do
     )
 
     Kousa.UserBlock.block(state.user.id, user_id_to_block)
-    Kousa.Room.block_from_room(state.user.id, user_id_to_block)
+    raise "ZZZ"
+    #Kousa.Room.block_from_room(state.user.id, user_id_to_block)
     nil
   end
 
@@ -57,44 +58,45 @@ defmodule Broth.LegacyHandler do
     )
   end
 
-  defp join_room_and_get_info(%{"roomId" => room_id_to_join}, fetch_id, state) do
-    reply =
-      case Kousa.Room.join_room(state.user.id, room_id_to_join) do
-        %{error: err} ->
-          %{op: "fetch_done", d: %{error: err}, fetchId: fetch_id}
-
-        %{room: room} ->
-          {room_id, users} = Beef.Users.get_users_in_current_room(state.user.id)
-
-          case Onion.RoomSession.lookup(room_id) do
-            [] ->
-              %{op: "error", d: "Room no longer exists."}
-
-            _ ->
-              {muteMap, deafMap, autoSpeaker, activeSpeakerMap} =
-                if room_id do
-                  Onion.RoomSession.get_maps(room_id)
-                else
-                  {%{}, false, %{}}
-                end
-
-              payload = %{
-                room: room,
-                users: users,
-                muteMap: muteMap,
-                deafMap: deafMap,
-                activeSpeakerMap: activeSpeakerMap,
-                roomId: room_id,
-                autoSpeaker: autoSpeaker
-              }
-
-              %{d: payload, op: "fetch_done", fetchId: fetch_id}
-          end
-
-        _ ->
-          %{op: "error", d: "unexpected error"}
-      end
-
-    prepare_socket_msg(reply, state)
+  defp join_room_and_get_info(%{"roomId" => _room_id_to_join}, _fetch_id, _state) do
+    raise "xxx"
+    #reply =
+    #  case Kousa.Room.join_room(state.user.id, room_id_to_join) do
+    #    %{error: err} ->
+    #      %{op: "fetch_done", d: %{error: err}, fetchId: fetch_id}
+#
+    #    %{room: room} ->
+    #      {room_id, users} = Beef.Users.get_users_in_current_room(state.user.id)
+#
+    #      case Onion.RoomSession.lookup(room_id) do
+    #        [] ->
+    #          %{op: "error", d: "Room no longer exists."}
+#
+    #        _ ->
+    #          {muteMap, deafMap, autoSpeaker, activeSpeakerMap} =
+    #            if room_id do
+    #              Onion.RoomSession.get_maps(room_id)
+    #            else
+    #              {%{}, false, %{}}
+    #            end
+#
+    #          payload = %{
+    #            room: room,
+    #            users: users,
+    #            muteMap: muteMap,
+    #            deafMap: deafMap,
+    #            activeSpeakerMap: activeSpeakerMap,
+    #            roomId: room_id,
+    #            autoSpeaker: autoSpeaker
+    #          }
+#
+    #          %{d: payload, op: "fetch_done", fetchId: fetch_id}
+    #      end
+#
+    #    _ ->
+    #      %{op: "error", d: "unexpected error"}
+    #  end
+#
+    #prepare_socket_msg(reply, state)
   end
 end

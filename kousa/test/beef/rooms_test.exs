@@ -106,17 +106,7 @@ defmodule Kousa.Beef.RoomsTest do
       assert Beef.Rooms.get_room_by_creator_id(u.id) == createdByU
       refute Beef.Rooms.get_room_by_creator_id(u.id) == notCreatedByU
     end
-
-    test "owner?" do
-      u = Factory.create(User)
-      r = Factory.create(Room)
-
-      assert !Beef.Rooms.owner?(r.id, u.id)
-
-      r2 = Factory.create(Room, [{:creatorId, u.id}])
-      assert Beef.Rooms.owner?(r2.id, u.id)
-    end
-
+    
     test "all_rooms" do
       Factory.create(Room)
       Factory.create(Room)

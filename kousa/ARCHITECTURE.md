@@ -34,12 +34,10 @@ application under the application supervision tree
 - Kousa.Utils are available to All.
 
 ## Process Structure and Roles.
-- Broth.SocketHandler maintains websocket state
+- Broth.SocketHandler maintains websocket state and is a read-cache for user db.
 - Onion.RoomSession maintains room state and is a read-cache for room db.
-- Onion.UserSession maintains user state and is a read-cache for user db.
   - Keeping the DB mutations in the session guarantees serialization of the DB and
     limits the number of times we can have stale data cause a disruption.
-- The only DB functions that should exist outside of a session is create room.
 
 ## Pubsub message channels
 - user:[UUID] user information about the user @ UUID

@@ -77,14 +77,16 @@ defmodule Onion.VoiceRabbit do
     data = Jason.decode!(payload)
 
     case data do
-      %{"uid" => user_id} ->
-        Onion.UserSession.send_ws(user_id, nil, Map.delete(data, "uid"))
+      %{"uid" => _user_id} ->
+        raise "use PubSub"
+      #  Onion.UserSession.send_ws(user_id, nil, Map.delete(data, "uid"))
 
-      %{"rid" => room_id} ->
-        Onion.RoomSession.broadcast_ws(
-          room_id,
-          Map.delete(data, "rid")
-        )
+      %{"rid" => _room_id} ->
+        raise "use PubSub"
+        #Onion.RoomSession.broadcast_ws(
+        #  room_id,
+        #  Map.delete(data, "rid")
+        #)
     end
 
     # You might want to run payload consumption in separate Tasks in production
