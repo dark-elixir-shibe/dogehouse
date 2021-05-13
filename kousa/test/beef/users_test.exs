@@ -111,22 +111,6 @@ defmodule Kousa.Beef.UsersTest do
       assert %{numFollowing: 2} = Repo.get(User, user.id)
     end
 
-    # LOLZ JK this won't work until we have mocked room pools.
-    @tag :skip
-    test "get_users_in_current_room", %{user: user} do
-      # build a room
-      %{id: rid} = Factory.create(Room, creatorId: user.id)
-
-      assert {nil, []} = Users.get_users_in_current_room(user.id)
-
-      # attach the user to the room.
-      Users.set_current_room(user.id, rid)
-
-      Repo.all(User)
-
-      Users.get_users_in_current_room(user.id)
-    end
-
     test "get_by_id", %{user: %{id: id}} do
       assert %User{id: ^id} = Users.get_by_id(id)
     end
@@ -141,36 +125,10 @@ defmodule Kousa.Beef.UsersTest do
       assert %User{reasonForBan: "bad human"} = Repo.get(User, user.id)
     end
 
-    test "get_by_id_with_current_room", %{user: user} do
-      assert %User{currentRoom: nil} = Users.get_by_id_with_current_room(user.id)
-
-      # build a room
-      %{id: rid} = Factory.create(Room, creatorId: user.id)
-
-      # attach the user to the room.
-      Users.set_current_room(user.id, rid)
-
-      assert %User{currentRoom: %Room{id: ^rid}} = Users.get_by_id_with_current_room(user.id)
-    end
-
     test "set_online", %{user: user} do
       Users.set_online(user.id)
 
       assert %User{online: true} = Repo.get(User, user.id)
-    end
-
-    test "set_user_left_current_room", %{user: user} do
-      # build a room
-      %{id: rid} = Factory.create(Room, creatorId: user.id)
-
-      # attach the user to the room.
-      Users.set_current_room(user.id, rid)
-
-      assert %User{currentRoomId: ^rid} = Repo.get(User, user.id)
-
-      Users.set_user_left_current_room(user.id)
-
-      assert %User{currentRoomId: nil} = Repo.get(User, user.id)
     end
 
     test "set offline", %{user: user} do

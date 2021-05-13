@@ -19,7 +19,7 @@ defmodule BrothTest.Room.GetInviteListTest do
   describe "the websocket room:get_invite_list operation" do
     test "gets an empty list when you haven't invited anyone", t do
       ref = WsClient.send_call(t.user_ws, "room:get_invite_list", %{"cursor" => 0})
-      WsClient.assert_reply(ref, %{"invites" => []}, t.user_ws)
+      WsClient.assert_reply(ref, %{"invites" => []})
     end
 
     test "returns one user when you have invited them", t do
@@ -28,10 +28,10 @@ defmodule BrothTest.Room.GetInviteListTest do
       WsClientFactory.create_client_for(follower)
       Kousa.Follow.follow(follower_id, t.user.id, true)
 
-      WsClient.send_msg(t.user_ws, "room:invite", %{"userId" => follower_id})
+      ref = WsClient.send_call(t.user_ws, "room:invite", %{"userId" => follower_id})
+      WsClient.assert_empty_reply(ref)
 
       ref = WsClient.send_call(t.user_ws, "room:get_invite_list", %{"cursor" => 0})
-
       WsClient.assert_reply(ref, %{"invites" => [%{"id" => ^follower_id}]})
     end
   end

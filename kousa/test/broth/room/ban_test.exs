@@ -118,10 +118,10 @@ defmodule BrothTest.Room.BanTest do
 
       flunk "we gotta get this working elsewise."
 
-      assert Beef.Room.banned?(room_id, banned_id)
+      assert Beef.Rooms.banned?(room_id, banned_id)
       also_banned = Factory.create(User)
       WsClientFactory.create_client_for(also_banned)
-      assert Beef.Room.banned?(room_id, also_banned.id)
+      assert Beef.Rooms.banned?(room_id, also_banned.id)
     end
   end
 end

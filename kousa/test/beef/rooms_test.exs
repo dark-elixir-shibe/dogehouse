@@ -106,7 +106,7 @@ defmodule Kousa.Beef.RoomsTest do
       assert Beef.Rooms.get_room_by_creator_id(u.id) == createdByU
       refute Beef.Rooms.get_room_by_creator_id(u.id) == notCreatedByU
     end
-    
+
     test "all_rooms" do
       Factory.create(Room)
       Factory.create(Room)
@@ -128,26 +128,6 @@ defmodule Kousa.Beef.RoomsTest do
                creatorId: ^id,
                name: "newdogeroom"
              } = Repo.get!(Room, r.id)
-    end
-
-    @tag :skip
-    test "join_room" do
-    end
-
-    test "increment_room_people_count/1" do
-      %Room{
-        id: id,
-        numPeopleInside: numPeopleInside
-      } = Factory.create(Room)
-
-      assert numPeopleInside == 1
-
-      Beef.Rooms.increment_room_people_count(id)
-      assert %Room{numPeopleInside: 2} = Repo.get!(Room, id)
-    end
-
-    @tag :skip
-    test "increment_room_people_count/2" do
     end
 
     test "delete_room_by_id" do
@@ -195,44 +175,6 @@ defmodule Kousa.Beef.RoomsTest do
 
     @tag :skip
     test "leave" do
-    end
-
-    test "raw_insert" do
-      creator = Factory.create(User)
-
-      Beef.Rooms.raw_insert(
-        %{
-          name: "cool room",
-          creatorId: creator.id
-        },
-        [
-          %{
-            id: creator.id,
-            displayName: creator.displayName,
-            numFollowers: creator.numFollowers,
-            avatarUrl: creator.avatarUrl
-          }
-        ]
-      )
-
-      creator2 = Factory.create(User)
-
-      Beef.Rooms.raw_insert(
-        %{
-          name: "another cool room",
-          creatorId: creator2.id
-        },
-        [
-          %{
-            id: creator2.id,
-            displayName: creator2.displayName,
-            numFollowers: creator2.numFollowers,
-            avatarUrl: creator2.avatarUrl
-          }
-        ]
-      )
-
-      assert [%Room{}, %Room{}] = Repo.all(Room)
     end
 
     test "update_name" do
