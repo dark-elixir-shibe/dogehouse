@@ -34,7 +34,8 @@ defmodule BrothTest.Room.InviteTest do
       follower_ws = WsClientFactory.create_client_for(follower)
       Kousa.Follow.follow(follower_id, t.user.id, true)
 
-      WsClient.send_msg(t.user_ws, "room:invite", %{"userId" => follower_id})
+      ref = WsClient.send_call(t.user_ws, "room:invite", %{"userId" => follower_id})
+      WsClient.assert_empty_reply(ref)
 
       # note this comes from the follower's client
       WsClient.assert_frame_legacy("invitation_to_room", %{"roomId" => ^room_id}, follower_ws)

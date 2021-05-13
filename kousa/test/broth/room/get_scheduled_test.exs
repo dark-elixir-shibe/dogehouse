@@ -25,11 +25,7 @@ defmodule BrothTest.Room.GetScheduledTest do
           %{"range" => "upcoming", "userId" => t.user.id}
         )
 
-      WsClient.assert_reply(
-        "room:get_scheduled:reply",
-        ref,
-        %{"rooms" => []}
-      )
+      WsClient.assert_reply(ref, %{"rooms" => []})
     end
 
     test "it returns most recent rooms", t do
