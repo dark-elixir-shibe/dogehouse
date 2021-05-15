@@ -23,8 +23,8 @@ defmodule Broth.Message.User.Unfollow do
   end
 
   def execute(changeset, state) do
-    with {:ok, %{userId: user_id}} <- apply_action(changeset, :validate) do
-      Kousa.Follow.follow(state.user.id, user_id, false)
+    with {:ok, %{userId: target_id}} <- apply_action(changeset, :validate) do
+      Kousa.User.unfollow(state.user, target_id)
       {:reply, %Reply{}, state}
     end
   end

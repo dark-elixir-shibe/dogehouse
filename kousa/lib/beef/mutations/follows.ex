@@ -14,10 +14,10 @@ defmodule Beef.Mutations.Follows do
     |> Repo.insert
   end
 
-  def follow(%{id: user_id}, target_id), do: unfollow(user_id, target_id)
+  def unfollow(%{id: user_id}, target_id), do: unfollow(user_id, target_id)
   def unfollow(user_id, target_id) do
     query = from f in Follow,
-      where: f.user_id == ^user_id and f.followerId == ^target_id
+      where: f.userId == ^user_id and f.followerId == ^target_id
     Repo.delete_all(query)
   end
 

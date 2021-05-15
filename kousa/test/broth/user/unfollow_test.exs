@@ -11,33 +11,28 @@ defmodule BrothTest.User.UnfollowTest do
 
   setup do
     user = Factory.create(User)
+    followed = Factory.create(User)
+
+    Beef.Users.follow(user.id, followed.id)
+
     user_ws = WsClientFactory.create_client_for(user)
 
-    {:ok, user: user, user_ws: user_ws}
+    {:ok, user: user, user_ws: user_ws, followed: followed}
   end
 
   describe "the user:unfollow operation" do
     test "causes you to to unfollow", t do
-      followed = Factory.create(User)
 
-      Beef.Follows.insert(%{
-        userId: followed.id,
-        followerId: t.user.id
-      })
-
-      assert Beef.Follows.following_me?(followed.id, t.user.id)
+      assert Beef.Users.follows?(t.user.id, t.followed.id)
 
       ref =
         WsClient.send_call(t.user_ws, "user:unfollow", %{
-          "userId" => followed.id
+          "userId" => t.followed.id
         })
 
       WsClient.assert_empty_reply(ref)
 
-      refute Beef.Follows.following_me?(followed.id, t.user.id)
+      refute Beef.Users.follows?(t.user.id, t.followed.id)
     end
-
-    @tag :skip
-    test "you can't follow yourself?"
   end
 end
