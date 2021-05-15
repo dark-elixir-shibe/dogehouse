@@ -48,30 +48,6 @@ defmodule Kousa.Room do
     #end
   end
 
-  def invite_to_room(user_id, user_id_to_invite) do
-    user = Beef.Users.get_by_id(user_id)
-
-    if user.currentRoomId && Follows.following_me?(user_id, user_id_to_invite) do
-      # @todo store room name in RoomSession to avoid db lookups
-      room = Rooms.get(user.currentRoomId)
-
-      if not is_nil(room) do
-        Onion.RoomSession.create_invite(
-          user.currentRoomId,
-          user_id_to_invite,
-          %{
-            roomName: room.name,
-            displayName: user.displayName,
-            username: user.username,
-            avatarUrl: user.avatarUrl,
-            bannerUrl: user.bannerUrl,
-            type: "invite"
-          }
-        )
-      end
-    end
-  end
-
   @authorized [:owner, :mod]
 
   def ban(user_id, opts) do
@@ -181,7 +157,9 @@ defmodule Kousa.Room do
           uid: user.id
         })
 
-        Enum.each(room.userIdsToInvite, &invite_to_room(room, &1, from: user.id))
+        # TODO: fix this hacky hack:
+        new_user = %{user | currentRoom: room}
+        Enum.each(room.userIdsToInvite, &invite(new_user, &1))
 
         join(room.id, user, speaker: true)
 
@@ -229,14 +207,16 @@ defmodule Kousa.Room do
     join(room_id, %{user | currentRoomId: nil}, opts)
   end
 
-  defp invite_to_room(room, invite_id, from: user_id) do
-    alias Broth.Message.User.Invitation
+  def invite(%{currentRoom: nil}, invite_id), do: {:error, "you are not in a room"}
+  def invite(%{currentRoom: room, id: user_id}, invite_id) do
+    alias Broth.Message.Room.Invited
 
-    PubSub.broadcast("user:" <> invite_id, %Invitation{
+    PubSub.broadcast("user:" <> invite_id, %Invited{
       roomId: room.id,
       name: room.name,
       fromUserId: user_id
     })
+    :ok
   end
 
   def leave(%{currentRoomId: nil}), do: {:error, "you are not in a room"}

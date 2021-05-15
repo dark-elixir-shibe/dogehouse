@@ -18,6 +18,10 @@ defmodule Beef.Users do
   defdelegate find_by_github_ids(ids), to: Beef.Access.Users
   defdelegate search(query, offset), to: Beef.Access.Users
 
+  # TODO: make these lenses
+  defdelegate blocked?(user_id, target_id), to: Beef.Access.UserBlocks
+  defdelegate follows?(user_id, target_id), to: Beef.Access.Follows
+
   #####################################################################################
   # CHOPPING BLOCK
   # we should strive to make the queries simpler and *reduce code*, so
@@ -39,6 +43,9 @@ defmodule Beef.Users do
   defdelegate set_role(user, role), to: Beef.Mutations.Users
   defdelegate set_auth(user, level), to: Beef.Mutations.Users
   defdelegate create_bot(user_id, username), to: Beef.Mutations.Users
+
+  defdelegate follow(user_id, target_id), to: Beef.Mutations.Follows
+  defdelegate unfollow(user_id, target_id), to: Beef.Mutations.Follows
 
   # LENSES
   defdelegate room_role(user), to: Beef.Lenses.Users

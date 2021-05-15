@@ -50,8 +50,8 @@ defmodule BrothTest.User.GetRelationshipTest do
 
       WsClient.assert_reply(ref, %{"relationship" => nil})
 
-      Kousa.Follow.follow(t.user.id, followed_id, true)
-      Kousa.Follow.follow(followed_id, t.user.id, true)
+      WsClient.do_call(t.user_ws, "user:follow", %{"userId" => followed_id})
+      WsClient.do_call(followed_ws, "user:follow", %{"userId" => t.user.id})
 
       ref =
         WsClient.send_call(
@@ -78,7 +78,7 @@ defmodule BrothTest.User.GetRelationshipTest do
       followed = %{id: followed_id} = Factory.create(User)
       followed_ws = WsClientFactory.create_client_for(followed)
 
-      Kousa.Follow.follow(t.user.id, followed_id, true)
+      WsClient.do_call(t.user_ws, "user:follow", %{"userId" => followed_id})
 
       ref =
         WsClient.send_call(

@@ -3,6 +3,7 @@ defmodule BrothTest.User.FollowTest do
   use KousaTest.Support.EctoSandbox
 
   alias Beef.Schemas.User
+  alias Beef.Users
   alias BrothTest.WsClient
   alias BrothTest.WsClientFactory
   alias KousaTest.Support.Factory
@@ -20,7 +21,7 @@ defmodule BrothTest.User.FollowTest do
     test "causes you to follow", t do
       followed = Factory.create(User)
 
-      refute Beef.Follows.following_me?(followed.id, t.user.id)
+      refute Users.follows?(t.user.id, followed.id)
 
       ref =
         WsClient.send_call(t.user_ws, "user:follow", %{
@@ -29,7 +30,7 @@ defmodule BrothTest.User.FollowTest do
 
       WsClient.assert_empty_reply(ref)
 
-      assert Beef.Follows.following_me?(followed.id, t.user.id)
+      assert Users.follows?(t.user.id, followed.id)
     end
 
     @tag :skip

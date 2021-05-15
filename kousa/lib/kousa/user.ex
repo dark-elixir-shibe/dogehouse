@@ -10,7 +10,7 @@ defmodule Kousa.User do
   def update_with(changeset = %Ecto.Changeset{}) do
     case Users.update(changeset) do
       {:ok, user} ->
-        
+
         PubSub.broadcast("user:" <> user.id, user)
         {:ok, user}
 
@@ -54,5 +54,23 @@ defmodule Kousa.User do
       count when is_integer(count) -> {:error, "you've reached the max of 100 bot accounts"}
       error -> error
     end
+  end
+
+  @doc """
+  causes the user to follow the `target_id` user, if the follow action is valid.
+  (target does not block the user).
+  """
+  def follow(user = %{id: user_id}, target_id) when target_id != user_id do
+    if Users.blocked?(target_id, user_id) do
+      user
+    else
+      Users.follow(user, target_id)
+      # TODO: update the target_id user with PubSub.
+    end
+  end
+  def follow(user, _), do: user
+
+  def unfollow(user, target_id) do
+    Users.unfollow(user, target_id)
   end
 end

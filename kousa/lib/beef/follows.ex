@@ -33,18 +33,6 @@ defmodule Beef.Follows do
     )
   end
 
-  # TODO: change the name of this, is_ by convention means
-  # "guard".
-  def following_me?(user_id, user_id_to_check) do
-    not is_nil(
-      from(
-        f in Follow,
-        where: f.userId == ^user_id and f.followerId == ^user_id_to_check
-      )
-      |> Beef.Repo.one()
-    )
-  end
-
   # fetch all the users
   def get_my_following(user_id, offset \\ 0) do
     items =
