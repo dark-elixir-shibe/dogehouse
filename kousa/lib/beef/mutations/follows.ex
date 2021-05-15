@@ -8,8 +8,8 @@ defmodule Beef.Mutations.Follows do
   def follow(user_id, target_id) do
     %Follow{}
     |> Follow.insert_changeset(%{
-      userId: user_id,
-      followerId: target_id
+      userId: target_id,
+      followerId: user_id
     })
     |> Repo.insert
   end
@@ -17,7 +17,7 @@ defmodule Beef.Mutations.Follows do
   def unfollow(%{id: user_id}, target_id), do: unfollow(user_id, target_id)
   def unfollow(user_id, target_id) do
     query = from f in Follow,
-      where: f.userId == ^user_id and f.followerId == ^target_id
+      where: f.userId == ^target_id and f.followerId == ^user_id
     Repo.delete_all(query)
   end
 
